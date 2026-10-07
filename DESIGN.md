@@ -1,6 +1,15 @@
 # NeonPine – neon‑lamp Christmas tree night light
 
 54.8 × 69.1 mm tree‑shaped PCB with 10 Brightmaster NEON‑3 neon lamps, powered from USB‑C 5 V.
+
+> **Branch `AC` – bipolar lamp drive (work in progress).** Each lamp now sits in an H‑bridge (§2.3), so either electrode can glow,
+> both can (alternating), or neither. The board keeps the rev B size; to make room, every lamp's two switch stacks stand
+> upright (5.7 mm wide), the base resistors are 0402, the shift registers are DHVQFN‑16, D1/D2 moved to SOD‑123F, and the
+> lamps moved slightly (tier 1 ±4.5 mm at y 21.5, tier 2 ±8 mm at y 34, tier 3 ±5/±14 mm at y 46.3), and the board went to 4 layers.
+> U2 sits in the centre of tier 3, U3 in the right wing next to lamps 9/10.
+> **Routing status:** 12 connections are left for hand routing (one HV+ link, four lamp nodes, the FB_MID divider link,
+> SR_DATA/SR_LATCH, LAMPA4, U3 +5V and the /OE pins of U2/U3 to GND); 0 clearance errors. The renders under `docs/img`, the `fab/` outputs, the BOM CSV and the
+> compliance documents still describe rev B.
 A CH32V003 MCU runs a 75–105 V boost converter and drives each lamp separately.
 Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in stand base. Unit manufacturing cost ≈ €19 / €9 / €6 at 10 / 100 / 500 pcs
 ([manufacturing §7](docs/manufacturing.md)).
@@ -66,14 +75,14 @@ CC1 ─R3 5k1─ GND, CC2 ─R4 5k1─ GND D3 SMF5.0A TVS (at the connector)    
 
 ### 2.2 HV boost (the MCU is the controller)
 ```
-+5V ── L11 330µH ──SW──┬── D1 ES1D (200 V) ──┬──────────┬──────────┬── HV+ (75–105 V)
-                       │   (R12 100Ω + C8    C4 1µ/250V D2 SMAJ100A R5 1M ─ R6 1M ─┬─ VFB → PD3 (ADC A4)
++5V ── L11 330µH ──SW──┬── D1 200 V fast ────┬──────────┬──────────┬── HV+ (75–105 V)
+                       │   (R12 100Ω + C8    C4 1µ/250V D2 SMF100A  R5 1M ─ R6 1M ─┬─ VFB → PD3 (ADC A4)
                   Q1 DMN15H310SE  100p snubber, (1210)   (clamp)                 R7 39k ║ C5 10n
 PD2 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │                       │
           R2 100k to GND                     GND        GND                     GND
 ```
 * **Q1 DMN15H310SE:** 150 V, R_DS(on) 330 mΩ at V_GS = 5 V. **R2 is required**: it keeps the boost off during reset and programming.
-  D2 clamps HV+ at V_BR 111–123 V, below Q1's 150 V.
+  D2 (SMF100A, SOD‑123F, 200 W) clamps HV+ at V_BR 111–123 V, below Q1’s 150 V.
 * **R12/C8:** an RC snubber across Q1, not fitted by default (DNP). Fit it if pre‑compliance shows SW‑node ringing at 30–100 MHz.
 * **L11:** 330 µH shielded 6 × 6 × 2.8 mm (SWPA6028S331MT, **verify I_sat ≥ 0.4 A** on the datasheet).
   Footprint `NeonPine:L_6.3x6.3_H3`, 3D model from `tools/inductor3d.py`.
@@ -86,19 +95,39 @@ PD2 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │           
   * Firmware limits are **not** counted as safety measures.
 * **Stored energy:** at most ½ · 1 µF · 105 V² ≈ 5.5 mJ in C4.
 
-### 2.3 Lamp channel (× 10)
+### 2.3 Lamp channel (× 10) – H‑bridge per lamp
 ```
-HV+ ── R2n 150k (0805) ──┤NEON LAn├── collector  Qn MMBTA42 (300 V NPN)
-                                       base ─ R4n 22k ─ MCU pin (see §2.5)
-                                       emitter ─ GND
+          HV+                               HV+
+           │                                 │
+     R2n 150k (0805)                   R3n 150k (0805)
+           │                                 │
+      A ───┴──── pad 2 ┤NEON LAn├ pad 1 ─────┴─── K
+           │                                 │
+  Q2n MMBTA42 collector               Q1n MMBTA42 collector
+  base ─ R5n 22k ─ LAMPAn (74HC595)   base ─ R4n 22k ─ LAMPn (MCU pin, one lamp on the 74HC595)
+  emitter ─ GND                       emitter ─ GND
 ```
-* Lamp current is I = (V_HV − 60 V) / 150 k: 0.31 mA at 105 V, 0.11 mA at 75 V. **The HV rail works as a smooth global dimmer (about 3:1)**,
-  and per‑lamp BAM adds detail on top of it.
+| Q2n (A side) | Q1n (K side) | Result |
+|---|---|---|
+| off | off | dark, no current |
+| off | **on** | K is the cathode: the **pad‑1 electrode** glows |
+| **on** | off | A is the cathode: the **pad‑2 electrode** glows |
+| alternate ≥ 100 Hz | | both electrodes glow (AC look); also evens out cathode wear |
+| on | on | dark, but both pull‑ups draw current – firmware never does this |
+
+* Lamp current is I = (V_HV − 60 V) / 150 k through the pull‑up of the lead that is *not* pulled low: 0.31 mA at 105 V, 0.11 mA at 75 V.
+  **The HV rail works as a smooth global dimmer (about 3:1)**, and per‑lamp BAM adds detail on top of it.
+* **Power budget – the cost of this topology.** The pull‑up on the lead that *is* pulled low also conducts, V_HV / 150 k = 0.5–0.7 mA,
+  more than the lamp itself. One lit lamp therefore takes 1.0 mA × 105 V ≈ 105 mW from the rail (45 mW at 75 V); ten lit lamps take
+  ≈ 1.05 W at 105 V. The rev B boost (§2.2) delivers ≈ 0.35 W (≈ 0.45 W in theory at the 60 % duty clamp), so **the firmware must
+  hold Σ duty × P_lamp(V_HV) under about 0.35 W**, e.g. by lowering V_HV when many lamps are lit. For full brightness on all lamps
+  the boost needs about 3× the power: a lower inductance with I_sat ≥ 1 A (e.g. 100 µH) plus a firmware frequency/duty retune –
+  open item, not done in this branch.
 * **Striking:**
   * Firmware starts the rail at ≥ 95 V (a kick to 105 V), and only ramps down once the lamps have struck.
   * A lamp that drops out below about 65 V is re‑struck with the same kick.
-* **Touch current at the lamp leads** is at most 105 V / 150 k = **0.7 mA DC**, because the resistor is on the anode side.
-* With DC drive only the cathode glows, so mount the lamp with the cathode electrode facing the viewer.
+* **Touch current at the lamp leads** is at most 105 V / 150 k = **0.7 mA DC**, because both leads are fed only through their 150 k pull‑ups.
+* With DC drive only the cathode glows; here the firmware chooses which lead is the cathode, per lamp and per BAM slot.
 * **Dark effect:**
   * Firmware keeps BAM at 1 kHz or faster with a minimum on‑time, plus a 50 ms kick at first ignition.
   * Lamps with a radioactive additive (Kr‑85) must **not** be used.
@@ -117,18 +146,22 @@ light reflected off a hand.
 ### 2.5 MCU pin map – CH32V003F4P6 (TSSOP‑20)
 | Pin (port) | Function |
 |---|---|
-| 10–17 (PC0–PC7) | Lamps **L7, L4, L2, L5, L1, L9, L3, L6**. All eight on port C, so one port write per BAM slot |
-| 8 (PD0), 1 (PD4) | Lamps **L8, L10** |
+| 10–17 (PC0–PC7) | Cathode‑side switches of lamps **L7, L4, L2, L5, L9, L3, L6, L10**. All eight on port C, so one port write per BAM slot |
+| 8 (PD0) | Cathode‑side switch of **L8** |
+| 3 (PD6) / 5 (PA1) / 1 (PD4) | **SR_DATA / SR_CLK / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK) |
 | 19 (PD2) | TIM1_CH1 → boost gate (via R1) |
 | 20 (PD3) | A4 – HV feedback |
 | 2 (PD5) | A5 – light sensor |
 | 6 (PA2) | A0 – TP2 trunk touch |
-| 5 (PA1) | TP3 spare / test |
-| 3 (PD6) | not connected (was TP1) |
 | 18 (PD1) | SWIO, on pogo pads J2 (5V / SWIO / GND), back side |
 | 4 (PD7) | NRST (C7 100n to GND) |
 
-The lamp‑to‑pin order comes from `tools/pinswap.py` (stored in `tools/lamp_pins.json`).
+**Shift registers (2 × 74HC595BQ, DHVQFN‑16 2.5 × 3.5 mm; exposed pad left unconnected):** U2 QA–QH = L7A, L4A, L2A, **L1 (cathode side)**, L1A, L5A, L3A, L6A;
+U3 QA = L9A, QB = L10A, QH = L8A (QC–QG unused). /OE is tied low and /SRCLR high: the outputs are random until the first latch,
+which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit shift + latch per BAM slot
+(8 slots per ≈ 1 ms frame) is a few µs of CPU time.
+
+The lamp‑to‑pin order (MCU pins and shift‑register outputs) comes from `tools/pinswap.py` (stored in `tools/lamp_pins.json`).
 **The firmware maps lamp index → port bit through a table.**
 
 ## 3. Firmware architecture (ch32v003fun or WCH SDK) – *not written yet*
@@ -158,22 +191,25 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 |---|---|---|---|
 | U1 | CH32V003F4P6 | 1 | 0.13 |
 | LA1–LA10 | Brightmaster NEON‑3 (TME) | 10 | *TME price* |
-| Q11–Q20 | MMBTA42 | 10 | 0.10 |
+| Q11–Q30 | MMBTA42 | 20 | 0.20 |
+| U2, U3 | 74HC595BQ (DHVQFN‑16) | 2 | ≈ 0.10 *(check)* |
 | Q1 | DMN15H310SE | 1 | 0.15 |
 | Q2 | Vishay TEPT4400 (light sensor) | 1 | 0.10 |
 | L11 | SWPA6028S331MT 330 µH | 1 | 0.06 |
-| D1 / D2 / D3 | ES1D / SMAJ100A / SMF5.0A | 1+1+1 | 0.07 |
+| D1 / D2 / D3 | 200 V 1 A fast diode, SOD‑123F *(pick P/N)* / SMF100A / SMF5.0A | 1+1+1 | 0.07 |
 | C4 | 1 µF 250 V X7R 1210 | 1 | 0.06 |
-| R21–R30 / R41–R50 | 150k 0805 / 22k 0603 | 10+10 | 0.03 |
+| R21–R40 / R41–R60 | 150k 0805 / 22k 0402 | 20+20 | 0.06 |
 | other R | 0603 (47, 100k, 5k1 ×2, 1M ×2, 39k, 22k, 1k) | 9 | 0.02 |
-| C1–C7 | 10µ, 100n ×3, 22µ/10V 0805, 10n, 1µ/250V | 7 | 0.04 |
+| C1–C7, C9, C10 | 10µ, 100n ×5, 22µ/10V 0805, 10n, 1µ/250V | 9 | 0.05 |
 | FB1 | 600 Ω @ 100 MHz 0603 | 1 | 0.01 |
 | J1 / F1 | USB4125‑GF‑A / MF‑NSMF050‑2 | 1+1 | 0.15 |
 | mech | rear cover + stand PCB, 3 × M2 × 5 standoff, 6 × M2 × 4 screw | – | *PCB price* + 0.10 |
 | | **Total excl. lamps and PCBs** (live LCSC prices 2026‑10‑06) | | **$3.17 / $2.47 / $2.15** at 10 / 100 / 500 units |
 
 ## 5. PCB & layout
-* **Board:** 2 layers, FR‑4 1.6 mm, 54.8 × 69.1 mm incl. stand tabs. GND pour on both layers (SMD pads solid, THT pads with
+* **Board:** **4 layers** (F.Cu / In1 / In2 / B.Cu = all SMD parts), FR‑4 1.6 mm, 54.8 × 69.1 mm incl. stand tabs (`SC` in `tools/pcb.py` can scale the whole tree if needed). Both inner layers are routing layers (no plane; EMC is not critical). The HV supply (HVBUS) may use B.Cu, In1 and In2 but never runs as a track on F.Cu.
+  **Safety note for the risk assessment:** unlike rev B, HVBUS now has through‑vias. Their plated barrels end at the front surface, tented under solder mask (no F.Cu track, 0.5 mm to the front GND pour). Solder mask is not rated insulation, so the front is no longer free of unlimited‑HV copper; check this against the touch/creepage argument in the risk assessment, or use blind B.Cu–In2 vias if the fab offers them.
+  GND pour on F.Cu and B.Cu (SMD pads solid, THT pads with
   thermal spokes, USB shell solid); all vias tented.
 * **Netclasses** (`tools/pcb.py` writes them to `NeonPine.kicad_pro`):
 
@@ -192,7 +228,7 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 * **Routing:** Freerouting **2.4.1** (`tools/route.py`; version 2.1.0 writes incomplete sessions). Freerouting leaves the last
   2–3 tight connections open; `tools/fixup.py` closes them with short legal links checked by KiCad's own collision test.
 * **Design flow:**
-  1. `tools/gen.py` writes the schematic.
+  1. `tools/gen.py` writes the schematic, then `tools/sch_boost.py` redraws the boost section with real wires.
   2. `kicad-cli sch export netlist -o np.net NeonPine.kicad_sch` produces the netlist.
   3. `tools/pcb.py np.net` builds the outline, art, placement and pours.
   4. `tools/pinswap.py` solves the lamp‑to‑pin map; if it changed, repeat steps 1–3.

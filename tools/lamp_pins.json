@@ -1,12 +1,31 @@
 {
- "14": "LAMP1",
- "12": "LAMP2",
- "16": "LAMP3",
- "11": "LAMP4",
- "13": "LAMP5",
- "17": "LAMP6",
- "10": "LAMP7",
- "8": "LAMP8",
- "15": "LAMP9",
- "1": "LAMP10"
+ "mcu": {
+  "14": "LAMP2",
+  "15": "LAMP3",
+  "11": "LAMP4",
+  "12": "LAMP5",
+  "16": "LAMP6",
+  "10": "LAMP7",
+  "8": "LAMP8",
+  "13": "LAMP9",
+  "17": "LAMP10"
+ },
+ "sr": [
+  "LAMPA4",
+  "LAMPA2",
+  "LAMPA1",
+  "LAMP1",
+  "LAMPA5",
+  "LAMPA3",
+  "LAMPA7",
+  "LAMPA8",
+  null,
+  null,
+  "LAMPA10",
+  "LAMPA9",
+  null,
+  null,
+  null,
+  "LAMPA6"
+ ]
 }

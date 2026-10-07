@@ -14,7 +14,7 @@ OUT = os.path.join(main.PRJ, 'NeonPine-cover.kicad_pcb')
 MM = pcbnew.FromMM
 STANDOFF = 5.0
 PITCH = 1.6 + STANDOFF                  # tree board -> cover board, plate to plate
-BX, BY = 100.0, 140.0                   # where the base plate is drawn (absolute mm)
+BX, BY = 100.0, main.OY + 70 * main.SC + 28   # where the base plate is drawn (absolute mm), below the cover
 
 b = pcbnew.NewBoard(OUT)
 b.GetDesignSettings().SetBoardThickness(MM(1.6))
@@ -51,8 +51,8 @@ mx = lambda x: 2 * main.OX - x          # mirror about the tree's centre line
 pts = [(mx(o.CPoint(i).x / 1e6), o.CPoint(i).y / 1e6) for i in range(o.PointCount())]
 for p, q in zip(pts, pts[1:] + pts[:1]): seg(p, q, pcbnew.Edge_Cuts)
 for hx, hy in main.HOLES: npth(main.OX - hx, main.OY + hy)
-X = lambda x: main.OX + x               # cover-face coordinates: x right as seen from behind the tree
-Y = lambda y: main.OY + y
+X = lambda x: main.OX + x * main.SC     # cover-face coordinates (rev B size, scaled like the tree): x right as seen from behind
+Y = lambda y: main.OY + y * main.SC
 SILK = pcbnew.F_SilkS
 
 text('NeonPine', X(0), Y(36.0), 3.0, bold=True)

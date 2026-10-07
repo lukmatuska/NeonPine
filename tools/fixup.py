@@ -14,7 +14,8 @@ PCB = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'NeonPine.k
 MM = pcbnew.FromMM
 BACK_ONLY = {'/HV+', '/SW', '/SNUB'}
 CLS = {'HV': (0.3, 0.5, 0.7, 0.35), 'HVBUS': (0.3, 0.5, 0.7, 0.35), 'PWR': (0.4, 0.15, 0.7, 0.35), 'Default': (0.2, 0.15, 0.6, 0.3)}
-LAYERS = (pcbnew.F_Cu, pcbnew.B_Cu)
+LAYERS = (pcbnew.F_Cu, pcbnew.In1_Cu, pcbnew.In2_Cu, pcbnew.B_Cu)
+HV_FORBIDDEN = (pcbnew.F_Cu,)   # HVBUS: no tracks on the front copper (vias through it are allowed)
 seq = lambda c: [c[i] for i in range(len(c))]
 V = lambda x, y: pcbnew.VECTOR2I(int(x), int(y))
 
@@ -79,13 +80,16 @@ def legal(new, netname):
     """new: list of PCB_TRACK / PCB_VIA not yet on the board"""
     others = [t for t in seq(b.Tracks()) if t.GetNetname() != netname] + \
              [p for f in seq(b.Footprints()) for p in f.Pads() if p.GetNetname() != netname and p.GetAttribute() != pcbnew.PAD_ATTRIB_NPTH]
+    # items not on the board yet do not resolve their netclass clearance: take it from the class table
+    own = MM(CLS.get(b.FindNet(netname).GetNetClassName(), CLS['Default'])[1])
     for it in new:
         for l in layers_of(it):
-            if netname in BACK_ONLY and l == pcbnew.F_Cu: return False
-            s = it.GetEffectiveShape(l)
+            if netname in BACK_ONLY and l in HV_FORBIDDEN and it.GetClass() != 'PCB_VIA': return False
+            # a via that is not on the board yet reports no copper ring on the inner layers; use its (full) start-layer ring
+            s = it.GetEffectiveShape(pcbnew.F_Cu) if it.GetClass() == 'PCB_VIA' else it.GetEffectiveShape(l)
             for o in others:
                 if l not in layers_of(o): continue
-                clr = max(it.GetOwnClearance(l), o.GetOwnClearance(l))
+                clr = max(own, it.GetOwnClearance(l), o.GetOwnClearance(l))
                 if s.Collide(o.GetEffectiveShape(l), clr): return False
             for e in edge:
                 if s.Collide(e.GetEffectiveShape(), MM(0.3)): return False
@@ -126,7 +130,7 @@ def try_connect(netname, g0, g1):
             for path in doglegs(a, c):
                 cands.append([make_track(net, l, u, v, w) for u, v in zip(path, path[1:])])
         for l in LAYERS:                                                # via - other layer - via
-            if netname in BACK_ONLY and l == pcbnew.F_Cu: continue
+            if netname in BACK_ONLY and l in HV_FORBIDDEN: continue
             if not (p[3] and q[3]): continue
             for path in doglegs(a, c):
                 cand = [make_track(net, l, u, v, w) for u, v in zip(path, path[1:])]

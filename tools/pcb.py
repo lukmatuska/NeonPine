@@ -11,10 +11,14 @@ PCB = os.path.join(PRJ, 'NeonPine.kicad_pcb')
 FPL = '/usr/share/kicad/footprints/'
 OX, OY = 100.0, 40.0          # board origin offset (mm); design coords: x right, y down, (0,0) = star tip
 MM = pcbnew.FromMM
+# Scale of the whole tree (outline, lamps, holes, art, fixed and start positions). 1.0 = rev B size (54.8 x 69.1 mm).
+# Part-to-part offsets inside a lamp's switch stack are not scaled.
+SC = 1.0
+sc = lambda *v: tuple(round(a * SC, 3) for a in v)
 
 # ---------------- net classes (written to the project file before the board is created)
 HV_PAT = ['Net-(LA*', 'Net-(Q??-C)', 'Net-(R5-Pad2)']          # lamp nets: behind 150k, may use both layers
-HVBUS_PAT = ['/HV+', '/SW', '/SNUB']                            # unlimited 105 V source: back layer only (route.py)
+HVBUS_PAT = ['/HV+', '/SW', '/SNUB']                            # unlimited 105 V source: never as tracks on F.Cu (route.py)
 PWR_PAT = ['/VBUS', '+5V', 'GND']
 def write_project():
     def cls(name, clr, tw, vd=0.6, vdr=0.3, prio=0):
@@ -42,52 +46,62 @@ def poly(pts):
     for x, y in pts: s.Append(MM(OX + x), MM(OY + y))
     return s
 def outline():
-    star = [(r * math.cos(math.radians(a)), 10.5 - r * math.sin(math.radians(a)))
-            for k in range(10) for a, r in [(90 + 36 * k, 10.5 if k % 2 == 0 else 4.4)]]
+    star = [(r * math.cos(math.radians(a)), 10.5 * SC - r * math.sin(math.radians(a)))
+            for k in range(10) for a, r in [(90 + 36 * k, (10.5 if k % 2 == 0 else 4.4) * SC)]]
     shapes = [star,
               [(0, 12), (14, 30), (-14, 30)],
               [(0, 22), (20, 44), (-20, 44)],
               [(0, 31), (30, 56), (-30, 56)],
               [(-21, 55.5), (21, 55.5), (21, 59.5), (18, 59.5), (18, 68.5), (16.5, 70), (-16.5, 70), (-18, 68.5), (-18, 59.5), (-21, 59.5)]]
+    shapes = [shapes[0]] + [[sc(x, y) for x, y in sh] for sh in shapes[1:]]
     u = poly(shapes[0])
     for s in shapes[1:]: u.BooleanAdd(poly(s))
     u.Simplify()
     u = u.Fillet(MM(1.5), MM(0.01))   # rounded corners all round
     # stand tabs on the pot bottom edge (plug into the base plate made by tools/cover.py)
     for tx, tw in TABS:
-        u.BooleanAdd(poly([(tx - tw / 2, 69.5), (tx + tw / 2, 69.5), (tx + tw / 2, 70 + TAB_H), (tx - tw / 2, 70 + TAB_H)]))
+        u.BooleanAdd(poly([(tx - tw / 2, 70 * SC - 0.5), (tx + tw / 2, 70 * SC - 0.5), (tx + tw / 2, 70 * SC + TAB_H), (tx - tw / 2, 70 * SC + TAB_H)]))
     u.Simplify()
     return u
 
-TABS = [(-11.0, 4.0), (11.0, 4.0)]   # stand tabs under the pot: centre x, width
+TABS = [(-11.0 * SC, 4.0), (11.0 * SC, 4.0)]   # stand tabs under the pot: centre x, width
 TAB_H = 1.6                           # = base plate thickness
 # M2 holes for the rear cover standoffs (cover = blank FR-4 plate, see tools/cover.py); keep-out radius on the back
-HOLES = [(-13.0, 40.5), (13.0, 40.5), (-14.6, 67.6)]   # 3-point fixing; the bottom-right corner belongs to USB-C + input protection
+HOLES = [sc(-13.0, 40.5), sc(13.0, 40.5), sc(-14.6, 67.6)]   # 3-point fixing; the bottom-right corner belongs to USB-C + input protection
 HOLE_KEEP = 2.5               # standoff Ø4 hex + margin
 
 # ---------------- fixed parts (design coords, rotation, side)
-LAMPS = {2: (-4, 21.0), 3: (4, 21.0), 4: (-7, 33.5), 5: (0, 33.5), 6: (7, 33.5),
-         7: (-13, 45.8), 8: (-5.0, 45.8), 9: (5.0, 45.8), 10: (13, 45.8)}   # centre of each lamp's 3 mm pad pair
+LAMPS = {1: (0, 8.0), 2: (-4.5, 21.5), 3: (4.5, 21.5), 4: (-7.99, 34.0), 5: (0, 34.0), 6: (7.99, 34.0),
+         7: (-14, 46.3), 8: (-5.0, 46.3), 9: (5.0, 46.3), 10: (14, 46.3)}   # centre of each lamp's 3 mm pad pair
+# Spacing rules behind these numbers: each lamp's glass (courtyard to ya + 11.3) must end above the next tier's pads, the
+# outer lamps' pads keep >= 0.3 mm to the board edge, and the 8 mm tier-2 pitch leaves routing room between the switch stacks.
+LAMPS = {n: sc(*p) for n, p in LAMPS.items()}
 FIXED = {
-    'LA1': (0, 8.0, 0, 'F'),                  # star lamp hangs from the star centre like the others (stays on the board)
-    'R21': (0, 10.6, 90, 'B'), 'R41': (0, 13.4, 0, 'B'), 'Q11': (0, 15.9, 0, 'B'),
-    'TP2': (-8.6, 66.4, 0, 'F'),              # pot touch pad (front)
-    'Q2': (-21.2, 52.5, 0, 'F'),              # ambient-light phototransistor = ornament in the left wing
-    'J1': (18 - 3.4, 63.5, 270, 'B'),          # USB-C, mouth flush with the right pot edge
+    'TP2': (*sc(-8.6, 66.4), 0, 'F'),          # pot touch pad (front)
+    'Q2': (*sc(-21.2, 52.5), 0, 'F'),          # ambient-light phototransistor = ornament in the left wing
+    'J1': (18 * SC - 3.4, 63.5 * SC, 270, 'B'),  # USB-C, mouth flush with the right pot edge
     # the three big parts fill the pot: boost switch + inductor on the left, MCU next to the USB connector
-    # boost: L11 far left (SW pad facing right), Q1 next to it with the drain tab facing up towards D1/C4/D2
-    'L11': (-10.5, 61.2, 180, 'B'), 'Q1': (-1.5, 62.0, 90, 'B'), 'U1': (6.3, 62.5, 90, 'B'),
+    'L11': (*sc(-10.5, 61.2), 180, 'B'), 'Q1': (*sc(-1.5, 62.0), 90, 'B'), 'U1': (*sc(6.3, 62.5), 90, 'B'),
     # USB input protection in the strip right above the connector: TVS first, then the PTC
-    'D3': (12.6, 56.8, 0, 'B'), 'F1': (17.6, 56.8, 0, 'B'),
+    'D3': (*sc(12.6, 56.8), 0, 'B'), 'F1': (*sc(17.6, 56.9), 0, 'B'),
+    # lamp-drive shift register U3 sits in the right wing next to lamps 9/10 (the only free spot in the tree besides the
+    # centre of tier 3, which U2 gets from the optimiser); pinswap.py then gives it the lamps closest to it
+    'U3': (*sc(19.4, 51.8), 180, 'B'),
 }
-# every lamp hangs down from its pad pair; R_L / R_B / Q stacked on the back under the lamp body
+# every lamp hangs down from its pad pair (pad 1 = K on the left, pad 2 = A on the right). On the back under the lamp body
+# sit two stacks, each next to its own lamp pad: K side (pull-up R3n, base R4n, switch Q1n) and A side (R2n, R5n, Q2n).
+# All stack parts stand vertical, so one column is only 2.5 mm wide (SOT-23 at 90 deg); a lamp's two columns are 5.7 mm wide.
+# Top to bottom: pull-up (rot 270: HV+ pad on top, 0.5 mm below the lamp pad; lamp-node pad at the bottom, touching distance to
+# the collector), switch (collector on top), base resistor 0402 (base pad on top, drive line at the bottom).
+SX = 1.6
 for n, (x, ya) in LAMPS.items():
     FIXED[f'LA{n}'] = (x, ya, 0, 'F')
-    FIXED[f'R{20 + n}'] = (x, ya + 2.6, 90, 'B')
-    FIXED[f'R{40 + n}'] = (x, ya + 5.4, 0, 'B')
-    FIXED[f'Q{10 + n}'] = (x, ya + 7.9, 0, 'B')
+    for side, (rp, rb, q) in ((-1, (30 + n, 40 + n, 10 + n)), (1, (20 + n, 50 + n, 20 + n))):
+        FIXED[f'R{rp}'] = (x + side * SX, ya + 2.7, 270, 'B')
+        FIXED[f'Q{q}'] = (x + side * SX, ya + 6.05, 90, 'B')
+        FIXED[f'R{rb}'] = (x + side * SX, ya + 8.75, 90, 'B')
 # everything else is placed by the optimiser (optimise()), starting from these rough positions (all on the back)
-START = {
+START = {r: (*sc(x, y), rot) for r, (x, y, rot) in {
     'D1': (-8.75, 50.5, 90), 'C4': (0, 47.6, 0), 'D2': (0, 52.85, 90),
     'C3': (0, 57.6, 0), 'R1': (-7.0, 57.0, 90), 'R2': (-9.6, 56.9, 90),
     'R5': (9.5, 48.0, 90), 'R6': (9.5, 51.5, 90), 'R7': (7.2, 57.0, 90), 'C6': (9.0, 57.0, 90),
@@ -97,8 +111,10 @@ START = {
     'R3': (17.2, 52.4, 0), 'R4': (17.2, 50.2, 0),
     'FB1': (15.0, 53.0, 0), 'R12': (-10.0, 57.5, 0), 'C8': (-12.0, 57.5, 0),
     'J2': (2.0, 67.0, 90),     # SWD pogo pads (production programming, before the cover goes on)
-}
-GAP = 0.25  # extra spacing around each optimised part (0.5 mm routing room between neighbours)
+    'U2': (0.0, 46.4, 180),    # lamp-drive shift register (74HC595BQ, DHVQFN-16), centre of tier 3; U3 is fixed (FIXED)
+    'C9': (-3.7, 44.1, 180), 'C10': (17.0, 49.0, 0),
+}.items()}
+GAP = 0.1   # extra spacing around each optimised part (0.2 mm on top of the courtyards)
 # airwire weights: short, fat switching loops first, then decoupling and the sensitive ADC node
 NET_W = {'/SW': 8, '/GATE': 4, '/GATE_DRV': 2, '/HV+': 1.5, '/VFB': 2, '/FB_MID': 1.5, 'GND': 0.0}
 PAIR_W = [(('C6', '1'), ('U1', '9'), 6), (('C6', '2'), ('U1', '7'), 4),        # MCU decoupling
@@ -110,12 +126,13 @@ PAIR_W = [(('C6', '1'), ('U1', '9'), 6), (('C6', '2'), ('U1', '7'), 4),        #
           (('R12', '1'), ('Q1', '2'), 5), (('C8', '2'), ('Q1', '3'), 4),             # optional snubber at Q1
           (('D1', '2'), ('Q1', '2'), 12),                                            # SW node: diode right at the drain tab
           (('R2', '1'), ('Q1', '1'), 3), (('D1', '1'), ('C4', '1'), 10), (('D2', '1'), ('C4', '1'), 4),
-          (('F1', '2'), ('J1', 'A9'), 8)]
+          (('F1', '2'), ('J1', 'A9'), 8),
+          (('C9', '1'), ('U2', '16'), 6), (('C9', '2'), ('U2', '8'), 3), (('C10', '1'), ('U3', '16'), 6), (('C10', '2'), ('U3', '8'), 3)]
 
 # ---------------- front silkscreen art: rim line, a string of light beads along the branches, snowflakes, little stars.
 # Everything is clipped automatically around pads, front parts (lamp bodies, LDR, touch pads), text and the board edge.
-FLAKES = [(9.4, 27.4, 1.15), (-9.4, 27.4, 1.15), (21.8, 53.4, 1.5)]  # x, y, radius
-STARS = [(-17.5, 47.4, 0.6), (17.0, 47.0, 0.6), (-25.0, 54.3, 0.55), (-9.8, 62.5, 0.7), (9.8, 62.5, 0.7)]
+FLAKES = [(*sc(9.4, 27.4), 1.4), (*sc(-9.4, 27.4), 1.4), (*sc(21.8, 53.4), 1.8)]  # x, y, radius
+STARS = [(*sc(-17.5, 47.4), 0.7), (*sc(17.0, 47.0), 0.7), (*sc(-25.0, 54.3), 0.65), (*sc(-9.8, 62.5), 0.8), (*sc(9.8, 62.5), 0.8)]
 def art(board, ol, fps):
     pads = []
     for fp in fps.values():
@@ -174,7 +191,7 @@ def art(board, ol, fps):
     acc = 0.0
     for (x0, y0), (x1, y1) in zip(bp, bp[1:] + bp[:1]):
         L = math.hypot(x1 - x0, y1 - y0)
-        slanted = L > 0 and 0.3 < abs(y1 - y0) / L < 0.95 and 12.5 < y0 < 54.5  # branch sides only (not the star, not flats)
+        slanted = L > 0 and 0.3 < abs(y1 - y0) / L < 0.95 and 12.5 * SC < y0 < 54.5 * SC  # branch sides only (not the star, not flats)
         n = max(1, int(L / 0.1))
         for i in range(n):
             acc += L / n
@@ -211,7 +228,7 @@ def optimise(comps, make, put, crt, inner, blocked, iters=250000):
     GAP apart from each other. Moves: shift, rotate, swap two parts."""
     import random
     STEP = 0.25
-    X0, Y0, NX, NY = -32.0, -2.0, int(64 / STEP), int(74 / STEP)
+    X0, Y0, NX, NY = -32.0 * SC, -2.0, int(64 * SC / STEP), int((72 * SC + 2) / STEP)
     # static obstacle grid -> 2D prefix sums for O(1) "is this rectangle free" checks
     bad = [[0] * NX for _ in range(NY)]
     for j in range(NY):
@@ -343,7 +360,7 @@ def optimise(comps, make, put, crt, inner, blocked, iters=250000):
     print('placement seeds:', ' '.join('%.0f' % c for c, _ in results))
     for r, v in results[0][1].items(): state[r] = v
     # greedy clean-up: move each part to its best legal spot anywhere on a 1 mm grid (two rounds), then polish
-    grid = [(x * 0.5, y * 0.5) for x in range(-60, 61, 2) for y in range(0, 141, 2)]
+    grid = [(x * 0.5, y * 0.5) for x in range(-int(60 * SC), int(60 * SC) + 1, 2) for y in range(0, int(140 * SC) + 1, 2)]
     for _ in range(2):
         for ref in refs:
             best = (local((ref,)), state[ref][:])
@@ -379,8 +396,8 @@ def free_spot(board, fps, ol, near, w, h):
                 b = c.BBox(); boxes.append((b.GetLeft() / 1e6 - OX, b.GetTop() / 1e6 - OY, b.GetRight() / 1e6 - OX, b.GetBottom() / 1e6 - OY))
     inner = pcbnew.SHAPE_POLY_SET(ol); inner.Inflate(-MM(0.8), pcbnew.CORNER_STRATEGY_ROUND_ALL_CORNERS, MM(0.01))
     best = None
-    for xi in range(-280, 281, 5):
-        for yi in range(50, 700, 5):
+    for xi in range(-int(280 * SC), int(280 * SC) + 1, 5):
+        for yi in range(50, int(700 * SC), 5):
             x, y = xi / 10, yi / 10
             r = (x - w / 2 - 0.25, y - h / 2 - 0.25, x + w / 2 + 0.25, y + h / 2 + 0.25)
             if any(r[0] < q[2] and q[0] < r[2] and r[1] < q[3] and q[1] < r[3] for q in boxes): continue
@@ -409,6 +426,7 @@ def main(netfile):
     write_project()
     comps = load_netlist(netfile)
     board = pcbnew.NewBoard(PCB)
+    board.SetCopperLayerCount(4)        # F.Cu / In1 + In2 = signals, +5V and the HV supply / B.Cu (all SMD parts)
     ol = outline()
     # edge cuts
     o = ol.Outline(0)
@@ -473,12 +491,12 @@ def main(netfile):
         s = pcbnew.PCB_TEXT(board); s.SetText(t); s.SetPosition(P(x, y)); s.SetLayer(layer)
         s.SetTextSize(pcbnew.VECTOR2I(MM(h), MM(h))); s.SetTextThickness(MM(h * 0.15))
         s.SetMirrored(layer == pcbnew.B_SilkS); board.Add(s)
-    text('NEON PINE', 0, 62.6, 1.8)
+    text('NEON PINE', 0, 62.6 * SC, 2.2)
     # HV warning on the back: nearest free spot to the HV output cap C4
     c4 = fps['C4'].GetPosition(); tx, ty = free_spot(board, fps, ol, (c4.x / 1e6 - OX, c4.y / 1e6 - OY), 4.4, 1.4)
     text('100 V!', tx, ty, 0.8, pcbnew.B_SilkS)
     art(board, ol, fps)
-    # GND pours both layers
+    # GND pours on the outer layers only; both inner layers are kept free for routing (EMC is not critical here)
     for lay in (pcbnew.F_Cu, pcbnew.B_Cu):
         z = pcbnew.ZONE(board); z.SetLayer(lay); z.SetNet(nets['GND'])
         z.Outline().AddOutline(ol.Outline(0)); z.SetLocalClearance(MM(0.3))
