@@ -1,0 +1,165 @@
+# NeonPine – manufacturing package
+
+## 1. Fabrication outputs (`fab/`, generated from rev B with KiCad 10)
+| File | Content |
+|---|---|
+| `NeonPine-gerbers.zip` | Gerber X2 (F/B Cu, Mask, Silkscreen, Paste, Edge.Cuts) + Excellon drill + drill map + job file |
+| `NeonPine-pos.csv` | Pick & place, both sides, mm (front: light sensor Q2 + touch pad; everything else SMD on the back) |
+| `NeonPine-bom.csv` | Grouped BOM (value, footprint, qty). **Add MPN / LCSC columns before quoting** |
+| `NeonPine.step` | 3D assembly (lamp and inductor models from `NeonPine.3dshapes/`) |
+| `NeonPine-cover-stand-gerbers.zip` | Rear cover + stand base (one file, two outlines): Edge.Cuts, mask, silkscreen (markings), NPTH drill. **No copper.** |
+
+Regenerate:
+```
+kicad-cli pcb export gerbers -o fab/gerber/ --layers F.Cu,B.Cu,F.Mask,B.Mask,F.Silkscreen,B.Silkscreen,F.Paste,B.Paste,Edge.Cuts NeonPine.kicad_pcb
+kicad-cli pcb export drill -o fab/gerber/ --format excellon --generate-map --map-format gerberx2 NeonPine.kicad_pcb
+kicad-cli pcb export pos -o fab/NeonPine-pos.csv --format csv --units mm --side both --exclude-dnp NeonPine.kicad_pcb
+kicad-cli sch export bom -o fab/NeonPine-bom.csv --fields 'Reference,Value,Footprint,${QUANTITY},${DNP}' --group-by Value,Footprint NeonPine.kicad_sch
+kicad-cli pcb export step -o fab/NeonPine.step --subst-models --force NeonPine.kicad_pcb
+python3 tools/cover.py   # then: kicad-cli pcb export gerbers -o fab/cover/ --layers F.Mask,B.Mask,F.Silkscreen,Edge.Cuts NeonPine-cover.kicad_pcb
+```
+
+## 2. PCB specification
+| Parameter | Value |
+|---|---|
+| Layers / material | 2, FR‑4 TG≥135, **UL 94 V‑0** (ask the fab for the UL file number for the technical file) |
+| Thickness / copper | 1.6 mm / 1 oz (35 µm) both sides |
+| Size | 54.8 × 69.1 mm incl. 2 stand tabs, irregular outline (star / tiers), corners R 1.5 mm, routed; 3 × Ø2.2 NPTH |
+| Min track / space | 0.2 / 0.15 mm (default class); HV and HVBUS classes 0.3 mm / **0.5 mm clearance** |
+| Min drill / via | 0.3 mm / 0.6 mm pad (vias tented both sides) |
+| Finish | **ENIG** (flat touch pads, nicer look) |
+| Solder mask / silk | green or black mask, white silk, both sides |
+| Panel | breakaway tabs only on the pot bottom edge **between** the stand tabs (keep the tree edges smooth) |
+| Cover + stand PCB | FR‑4 1.6 mm, **no copper**, black (or green) mask both sides, white silk on the outer face, Ø2.2 NPTH |
+| Test | 100 % electrical test (flying probe) |
+
+## 3. Assembly
+1. **Back side SMT** (all SMD parts): solder paste, place, reflow with a SAC305 profile.
+2. **Front THT:** light sensor **Q2 TEPT4400**, hand‑soldered: the **collector goes in the square pad (pad 1)**, emitter in pad 2.
+   Check the lead identification against the Vishay drawing (the leads are marked E/C), and seat the sensor flat (3 mm ball facing forward).
+   J2 is **not a part**, just three pogo pads on the back for programming.
+3. **Lamps (THT, hand or selective solder):**
+   * Bend the leads 90° about 1.5 mm from the glass seal, using a bending jig. **Never bend at the glass.**
+   * The **cathode** lead goes to pad 1, the left pad seen from the front, which is on the transistor (Qn collector) net. With DC drive only the cathode glows,
+     so when forming the leads, turn the electrode pair so the cathode plate faces the viewer.
+   * Insert, lay the body flat on the front, solder on the back, and trim the leads to ≤ 1.5 mm (they sit under the rear cover).
+   * The star lamp LA1 is mounted standing up through the star.
+   * **Fix each lamp with a dab of neutral‑cure silicone** under the body (risk H8).
+4. **Cleaning: mandatory.** Wash off flux residues (no‑clean residue + 105 V + a 2 MΩ feedback divider → leakage and HV drift).
+   Dry at 60 °C for 30 min.
+5. **Program and run the end‑of‑line test (§4, §5) before the cover goes on** (the pogo pads J2 are under the cover).
+6. **Rear cover:** press 3 × M2 × 5 mm hex standoffs (F‑F) onto the main board with M2 × 4 screws from the front (holes H1–H3), put the
+   cover on (markings outward) and fix it with 3 × M2 × 4 screws. Torque ≈ 0.2 N·m. **No cover = no shipment** (risk H1).
+7. Apply the serial/batch label in the S/N field of the cover.
+8. **Stand:** push the tree tabs (front row) and the cover tabs (rear row) into the base slots; a drop of cyanoacrylate
+   or a snug press fit (slot width 1.7 mm, tab 1.6 mm).
+
+## 4. Programming
+* Programmer: WCH‑LinkE (SWD single‑wire), pads J2: `5V – SWIO – GND` (pin 1 = 5V, square pad).
+* Command: `minichlink -w firmware.bin flash -b` (ch32v003fun) or WCH‑LinkUtility.
+* After flashing, read back the firmware version / CRC and record it against the serial number.
+
+## 5. End‑of‑line test (per unit, ≈ 30 s)
+Fixture: USB‑C power through a current meter, pogo pins on J2, a light‑tight hood with an "eye" photodiode per lamp (or a camera).
+
+| Step | Check | Limit |
+|---|---|---|
+| 1 | Power on at 5.0 V, MCU idle (boost off) | I_in < 10 mA |
+| 2 | Firmware **self‑test mode** (via SWD flag): ramp HV to 105 V, MCU reports the ADC reading | 100–110 V (via ADC); I_in 60–150 mA with all lamps on |
+| 3 | Each lamp in sequence (camera / photodiodes) | all 10 strike within 1 s, none dark, no wrong lamp (pin‑map check) |
+| 4 | Touch pad: the fixture touches TP2 (through the mask) with a grounded finger probe | firmware registers it |
+| 5 | Light sensor: hood dark vs. LED on | ADC delta > threshold |
+| 6 | HV off → discharge | MCU reports < 60 V within 2 s |
+| 7 | After the cover is fitted: power on through USB, all lamps light; visual check of lamp bonding, cover screws, label | OK |
+
+Log: serial number, firmware CRC, measured currents and HV, and pass/fail → keep with the batch record (traceability, GPSR).
+
+## 6. Traceability
+* Serial / batch format: `NP-1 <rev> <YYWW>-<nnnn>` on the rear‑cover label, also in the EOL test log.
+* Keep the component lot codes per production batch (lamps especially, plus their radioactivity / RoHS declarations).
+
+## 7. Manufacturing cost – small series (rev B, prices checked 2026‑10‑06)
+Per finished unit, in **EUR excluding VAT**. USD prices are converted at 1 EUR = 1.15 USD.
+Assumptions:
+* **SMT:** JLCPCB "economic" PCBA on the back side.
+* **Hand work:** lamps, light sensor, cover and stand at ≈ €18/h (CZ).
+* **Delivery:** to CZ by courier.
+
+### 7.1 Sources
+| Item | Source | Basis |
+|---|---|---|
+| Electronic BOM | LCSC / JLCPCB parts library (live query, 2026‑10‑06) | price break at qty × units; table §7.4 |
+| Neon lamps | **TME quote for NEON‑4** (EUR incl. 21 % VAT: 10+ 0.287 · 30+ 0.207 · 100+ 0.173 · 600+ 0.129 · 2400+ 0.086) | **Proxy:** the design uses **NEON‑3**, same family and size. **Get the NEON‑3 quote** – NEON‑4 is a 135 V DC type and is not usable on the 105 V rail |
+| SMT assembly | JLCPCB economic PCBA fees: setup $8, stencil $1.5, **$3 per unique extended part**, $0.0016 per joint | 148 SMT joints; **12 unique extended parts** → $45.5 per order + $0.24 per board |
+| PCBs | estimate in the style of JLCPCB's calculator (2 layers, 1.6 mm, ENIG, 55 × 69 mm; cover/stand board without copper) | **estimate – run the online quote** |
+| Mechanics, packaging, freight | estimates | |
+
+### 7.2 Unit cost (rev B BOM as designed, with the in‑stock substitutes noted in §7.4)
+| Cost item | 10 pcs | 100 pcs | 500 pcs | Notes |
+|---|---|---|---|---|
+| Electronic BOM excl. lamps | 2.75 | 2.15 | 1.87 | $3.17 / $2.47 / $2.15 – see §7.4 |
+| 10 × neon lamps | 1.43 | 1.07 | 0.71 | TME 100+ / 600+ / 2400+ break, ex VAT (NEON‑4 proxy) |
+| Main PCB (ENIG) | 2.61 | 0.35 | 0.24 | ≈ $30 / $40 / $140 per order |
+| Cover + stand PCB | 1.30 | 0.39 | 0.26 | ≈ $15 / $45 / $150 per order |
+| SMT assembly (JLC) | 4.17 | 0.60 | 0.29 | $45.5 per order + $0.24 per board |
+| Freight PCB + PCBA → CZ | 1.74 | 0.30 | 0.12 | ≈ $20 / $35 / $70 per shipment |
+| M2 standoffs ×3 + screws ×6 | 0.30 | 0.15 | 0.12 | |
+| Hand assembly | 3.60 | 3.00 | 1.80 | 12 / 10 / 6 min (lamp bending jig at 500) |
+| Programming + end‑of‑line test | 0.45 | 0.36 | 0.30 | 1.5 / 1.2 / 1 min |
+| Box, insert, printed manual | 1.00 | 0.70 | 0.50 | |
+| **Unit cost, as designed** | **≈ 19.4** | **≈ 9.1** | **≈ 6.2** | EUR ex VAT |
+| **Unit cost with the cost‑down in §7.3** | **≈ 18.4** | **≈ 8.3** | **≈ 5.5** | |
+
+Import: 21 % CZ import VAT on the JLC shipment (recoverable for VAT payers); PCBs/PCBA are normally duty‑free – check the HS code.
+At 10 pcs the fixed per‑order costs dominate: assembly fees, PCB minimums and freight are ≈ €10 of the €19.
+
+### 7.3 Findings from the price check (act before ordering)
+| # | Finding | Action |
+|---|---|---|
+| 1 | **L11 SWPA6028S331MT:** rated only **300 mA** (3.64 Ω) and **0 in stock** | Use **SWPA6045S331MT (C83453)**: 330 µH, 570 mA, 1.27 Ω, $0.05–0.09, in stock. It is 6 × 6 × 4.5 mm with the same land‑pattern family and still fits under the 5 mm cover standoffs. Update the value in `tools/gen.py` |
+| 2 | **C4 1 µF 250 V in 1210 does not exist at LCSC** (1210 only goes to 220 nF at 250 V) | Change the footprint to **1812** and use **C106152** (1 µF 250 V X7R, $0.19–0.38), or use 2 × 470 nF. Small re‑place and re‑route |
+| 3 | **Q1 DMN15H310SE: 1 in stock at JLC**, $0.37–0.66 | Drop‑in SOT‑223 alternative **CJT04N15 (C81507)**: 150 V, 160 mΩ at 10 V, V_th 2.5 V, $0.10–0.20, 11 k in stock. **Check R_DS(on) at V_GS = 5 V** on the datasheet. Saves ≈ €0.25/unit |
+| 4 | **J1 USB4125‑GF‑A** is the most expensive part ($0.58–0.84) | Cost‑down option: **HC‑TYPE‑C‑6P‑01A (C2894893)**, 6‑pin power‑only, $0.03–0.05, in stock. Needs a footprint change. Saves ≈ €0.5–0.7/unit |
+| 5 | Q2 TEPT4400 costs $0.31–0.42 (THT, hand‑soldered) | Acceptable – it replaces the CdS LDR (RoHS). A cheaper SMD ambient‑light sensor would have to go on the front, which means a second SMT side |
+| 6 | 12 extended parts × $3 = $36 per order | Irrelevant at 500 pcs; at 10 pcs it is 30 % of the assembly cost. Using JLC "basic" alternatives where possible (C3 22 µF) saves $3 each |
+
+### 7.4 Electronic BOM detail (LCSC price at the needed quantity, USD per piece)
+| Ref | Qty | LCSC | Part | Library | 10 units | 100 units | 500 units |
+|---|---|---|---|---|---|---|---|
+| U1 | 1 | C5187096 | CH32V003F4P6 | extended | 0.288 | 0.224 | 0.163 |
+| Q11–Q20 | 10 | C118745 | MMBTA42 | extended | 0.029 | 0.019 | 0.017 |
+| Q1 | 1 | C155224 | DMN15H310SE‑13 (alt. C81507 CJT04N15) | extended | 0.535 | 0.410 | 0.374 |
+| Q2 | 1 | C132178 | TEPT4400 | extended | 0.421 | 0.341 | 0.306 |
+| L11 | 1 | C83453 | SWPA6045S331MT (see 7.3 #1) | extended | 0.088 | 0.072 | 0.064 |
+| D1 | 1 | C85620 | ES1D‑LTP | extended | 0.029 | 0.029 | 0.023 |
+| D2 | 1 | C283870 | SMAJ100A | extended | 0.035 | 0.035 | 0.028 |
+| D3 | 1 | C284108 | SMF5.0A | extended | 0.019 | 0.019 | 0.017 |
+| F1 | 1 | C75464 | MF‑NSMF050‑2 | extended | 0.039 | 0.039 | 0.030 |
+| J1 | 1 | C3151650 | USB4125‑GF‑A (alt. C2894893) | extended | 0.839 | 0.642 | 0.584 |
+| C4 | 1 | C106152 | 1 µF 250 V X7R **1812** (see 7.3 #2) | extended | 0.302 | 0.225 | 0.206 |
+| C3 | 1 | C29277 | 22 µF 10 V X5R 0805 | extended | 0.082 | 0.059 | 0.048 |
+| C1 | 1 | C19702 | 10 µF 10 V 0603 | basic | 0.032 | 0.032 | 0.025 |
+| C2, C6, C7 | 3 | C14663 | 100 nF 0603 | basic | 0.012 | 0.012 | 0.007 |
+| C5 | 1 | C57112 | 10 nF 0603 | basic | 0.011 | 0.011 | 0.009 |
+| FB1 | 1 | C1002 | 600 Ω @ 100 MHz 0603 | basic | 0.013 | 0.013 | 0.010 |
+| R21–R30 | 10 | C17470 | 150 k 0805 | basic | 0.005 | 0.004 | 0.003 |
+| R9, R41–R50 | 11 | C31850 | 22 k 0603 | basic | 0.004 | 0.003 | 0.003 |
+| R5, R6 | 2 | C22935 | 1 M 0603 | basic | 0.002 | 0.002 | 0.002 |
+| R3, R4 | 2 | C23186 | 5.1 k 0603 | basic | 0.002 | 0.002 | 0.001 |
+| R1, R2, R7, R11 | 4 | basic | 47 / 100 k / 39 k / 1 k 0603 | basic | 0.002 | 0.002 | 0.002 |
+| **Sum per board** | | | | | **$3.17** | **$2.47** | **$2.15** |
+| *With CJT04N15 + HC‑TYPE‑C‑6P* | | | | | *$2.04* | *$1.62* | *$1.34* |
+
+Lamps: 10 per board → 100 / 1 000 / 5 000 lamps per series. R12 and C8 (snubber) are DNP and not counted.
+
+### 7.5 One‑time costs (not in the unit cost)
+| Item | ≈ EUR |
+|---|---|
+| EMC tests (EN 55015 / 61547 + FCC Part 15B), accredited lab | 2 600–5 200 |
+| Safety evaluation (GPSR file, IEC 60598/62368 method) | 900–2 600 |
+| WEEE / packaging EPR registrations, authorised representative | 250–1 300 per country per year |
+| EOL test fixture (pogo bed, photodiodes) + lamp‑bending jig | 250–700 |
+| Prototype round (rev B samples, 10 pcs) | ≈ 200 |
+
+At 500 units, the one‑time costs add **≈ €9–17 per unit**, more than the unit cost itself. Compliance pays off from about
+2 000 units (≈ €2.5–4.5 per unit).
