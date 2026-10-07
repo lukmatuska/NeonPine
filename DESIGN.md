@@ -3,13 +3,15 @@
 54.8 × 69.1 mm tree‑shaped PCB with 10 Brightmaster NEON‑3 neon lamps, powered from USB‑C 5 V.
 
 > **Branch `AC` – bipolar lamp drive (work in progress).** Each lamp now sits in an H‑bridge (§2.3), so either electrode can glow,
-> both can (alternating), or neither. The board keeps the rev B size; to make room, every lamp's two switch stacks stand
-> upright (5.7 mm wide), the base resistors are 0402, the shift registers are DHVQFN‑16, D1/D2 moved to SOD‑123F, and the
-> lamps moved slightly (tier 1 ±4.5 mm at y 21.5, tier 2 ±8 mm at y 34, tier 3 ±5/±14 mm at y 46.3), and the board went to 4 layers.
+> both can (alternating), or neither. The board keeps the rev B size; to make room, each lamp's switches are one
+> **MMDT5551 dual 160 V NPN (SOT‑363)** with 0603 HV pull‑ups and 0402 base resistors (one 5.4 × 6.3 mm stack per lamp),
+> the low‑voltage passives are 0402, the shift registers are DHVQFN‑16, D1/D2 moved to SOD‑123F, and the
+> lamps moved slightly (tier 1 ±4.5 mm at y 21.5, tier 2 ±8 mm at y 34, tier 3 ±5/±14 mm at y 46.3), and the board is 2 layers.
 > U2 sits in the centre of tier 3, U3 in the right wing next to lamps 9/10.
-> **Routing status:** 12 connections are left for hand routing (one HV+ link, four lamp nodes, the FB_MID divider link,
-> SR_DATA/SR_LATCH, LAMPA4, U3 +5V and the /OE pins of U2/U3 to GND); 0 clearance errors. The renders under `docs/img`, the `fab/` outputs, the BOM CSV and the
-> compliance documents still describe rev B.
+> **Routing status (2 layers, 2026‑10‑08): fully routed** (Freerouting + scripted SOT‑363 fan‑outs + hand routing, U2 QE–QG
+> swapped by hand). 0 unconnected, 0 errors with the HVBUS/PWR pattern fixes; the hand edits (J2, U3, Q15/R55 around lamp 5)
+> live only in the board file – `tools/pcb.py` would not reproduce them.
+> The renders under `docs/img`, the `fab/` outputs, the BOM CSV and the compliance documents still describe rev B.
 A CH32V003 MCU runs a 75–105 V boost converter and drives each lamp separately.
 Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in stand base. Unit manufacturing cost ≈ €19 / €9 / €6 at 10 / 100 / 500 pcs
 ([manufacturing §7](docs/manufacturing.md)).
@@ -99,15 +101,15 @@ PD2 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │           
 ```
           HV+                               HV+
            │                                 │
-     R2n 150k (0805)                   R3n 150k (0805)
+   R2n 150k (0603, 200 V)            R3n 150k (0603, 200 V)
            │                                 │
       A ───┴──── pad 2 ┤NEON LAn├ pad 1 ─────┴─── K
            │                                 │
-  Q2n MMBTA42 collector               Q1n MMBTA42 collector
+  Q1n unit B collector C2            Q1n unit A collector C1     (Q1n = MMDT5551, 160 V dual NPN)
   base ─ R5n 22k ─ LAMPAn (74HC595)   base ─ R4n 22k ─ LAMPn (MCU pin, one lamp on the 74HC595)
   emitter ─ GND                       emitter ─ GND
 ```
-| Q2n (A side) | Q1n (K side) | Result |
+| Q1n B (A side) | Q1n A (K side) | Result |
 |---|---|---|
 | off | off | dark, no current |
 | off | **on** | K is the cathode: the **pad‑1 electrode** glows |
@@ -115,6 +117,10 @@ PD2 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │           
 | alternate ≥ 100 Hz | | both electrodes glow (AC look); also evens out cathode wear |
 | on | on | dark, but both pull‑ups draw current – firmware never does this |
 
+* **Parts:** Q1n = MMDT5551 (Diodes Inc., V_CEO 160 V, SOT‑363, pin‑out E1 B1 C2 E2 B2 C1); 160 V covers the 123 V D2 clamp.
+  The pull‑ups dissipate up to 105² / 150 k = 74 mW (the lead that is pulled low), so they must be **0603 high‑voltage
+  thick film rated ≥ 200 V / 0.1 W** (e.g. RCV0603); a standard 0603 is only rated 75 V. 0402 is not possible here (≤ 100 V even in HV series).
+  No 160 V+ dual NPN exists in a DFN package (Nexperia's DFN2020 doubles stop at 120 V, PBSS4112PAN), and there is no quad.
 * Lamp current is I = (V_HV − 60 V) / 150 k through the pull‑up of the lead that is *not* pulled low: 0.31 mA at 105 V, 0.11 mA at 75 V.
   **The HV rail works as a smooth global dimmer (about 3:1)**, and per‑lamp BAM adds detail on top of it.
 * **Power budget – the cost of this topology.** The pull‑up on the lead that *is* pulled low also conducts, V_HV / 150 k = 0.5–0.7 mA,
@@ -146,7 +152,7 @@ light reflected off a hand.
 ### 2.5 MCU pin map – CH32V003F4P6 (TSSOP‑20)
 | Pin (port) | Function |
 |---|---|
-| 10–17 (PC0–PC7) | Cathode‑side switches of lamps **L7, L4, L2, L5, L9, L3, L6, L10**. All eight on port C, so one port write per BAM slot |
+| 10–17 (PC0–PC7) | Cathode‑side switches of lamps **L7, L4, L2, L5, L3, L9, L6, L10**. All eight on port C, so one port write per BAM slot |
 | 8 (PD0) | Cathode‑side switch of **L8** |
 | 3 (PD6) / 5 (PA1) / 1 (PD4) | **SR_DATA / SR_CLK / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK) |
 | 19 (PD2) | TIM1_CH1 → boost gate (via R1) |
@@ -156,8 +162,8 @@ light reflected off a hand.
 | 18 (PD1) | SWIO, on pogo pads J2 (5V / SWIO / GND), back side |
 | 4 (PD7) | NRST (C7 100n to GND) |
 
-**Shift registers (2 × 74HC595BQ, DHVQFN‑16 2.5 × 3.5 mm; exposed pad left unconnected):** U2 QA–QH = L7A, L4A, L2A, **L1 (cathode side)**, L1A, L5A, L3A, L6A;
-U3 QA = L9A, QB = L10A, QH = L8A (QC–QG unused). /OE is tied low and /SRCLR high: the outputs are random until the first latch,
+**Shift registers (2 × 74HC595BQ, DHVQFN‑16 2.5 × 3.5 mm; exposed pad = GND (footprint `NeonPine:DHVQFN-16-…_EPGND`, EP numbered 8)):** U2 QA–QH = L8A, L7A, L4A, L2A, L1A, **L1 (cathode side)**, L5A, L3A;
+U3 QE = L10A, QF = L9A, QH = L6A (QA–QD, QG unused). /OE is tied low and /SRCLR high: the outputs are random until the first latch,
 which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit shift + latch per BAM slot
 (8 slots per ≈ 1 ms frame) is a few µs of CPU time.
 
@@ -191,23 +197,23 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 |---|---|---|---|
 | U1 | CH32V003F4P6 | 1 | 0.13 |
 | LA1–LA10 | Brightmaster NEON‑3 (TME) | 10 | *TME price* |
-| Q11–Q30 | MMBTA42 | 20 | 0.20 |
+| Q11–Q20 | MMDT5551 (dual NPN, SOT‑363) | 10 | ≈ 0.20 *(check)* |
 | U2, U3 | 74HC595BQ (DHVQFN‑16) | 2 | ≈ 0.10 *(check)* |
 | Q1 | DMN15H310SE | 1 | 0.15 |
 | Q2 | Vishay TEPT4400 (light sensor) | 1 | 0.10 |
 | L11 | SWPA6028S331MT 330 µH | 1 | 0.06 |
 | D1 / D2 / D3 | 200 V 1 A fast diode, SOD‑123F *(pick P/N)* / SMF100A / SMF5.0A | 1+1+1 | 0.07 |
 | C4 | 1 µF 250 V X7R 1210 | 1 | 0.06 |
-| R21–R40 / R41–R60 | 150k 0805 / 22k 0402 | 20+20 | 0.06 |
-| other R | 0603 (47, 100k, 5k1 ×2, 1M ×2, 39k, 22k, 1k) | 9 | 0.02 |
-| C1–C7, C9, C10 | 10µ, 100n ×5, 22µ/10V 0805, 10n, 1µ/250V | 9 | 0.05 |
+| R21–R40 / R41–R60 | 150k 0603 HV (≥ 200 V) / 22k 0402 | 20+20 | ≈ 0.15 *(check HV part)* |
+| other R | 0402 (47, 100k, 5k1 ×2, 39k, 22k, 1k); R5/R6 1M stay 0603 (≈ 52 V across each, 0402 is rated 50 V) | 9 | 0.02 |
+| C1–C7, C9, C10 | 0402: 100n ×5, 10n · 0603: C1 10µ · 0805: C3 22µ/10V · 1210: C4 1µ/250V (bulk caps kept larger for DC‑bias derating) | 9 | 0.05 |
 | FB1 | 600 Ω @ 100 MHz 0603 | 1 | 0.01 |
 | J1 / F1 | USB4125‑GF‑A / MF‑NSMF050‑2 | 1+1 | 0.15 |
 | mech | rear cover + stand PCB, 3 × M2 × 5 standoff, 6 × M2 × 4 screw | – | *PCB price* + 0.10 |
 | | **Total excl. lamps and PCBs** (live LCSC prices 2026‑10‑06) | | **$3.17 / $2.47 / $2.15** at 10 / 100 / 500 units |
 
 ## 5. PCB & layout
-* **Board:** **4 layers** (F.Cu / In1 / In2 / B.Cu = all SMD parts), FR‑4 1.6 mm, 54.8 × 69.1 mm incl. stand tabs (`SC` in `tools/pcb.py` can scale the whole tree if needed). Both inner layers are routing layers (no plane; EMC is not critical). The HV supply (HVBUS) may use B.Cu, In1 and In2 but never runs as a track on F.Cu.
+* **Board:** **2 layers** (F.Cu / B.Cu = all SMD parts; was 4 layers, reduced for cost), FR‑4 1.6 mm, 54.8 × 69.1 mm incl. stand tabs (`SC` in `tools/pcb.py` can scale the whole tree if needed). The HV supply (HVBUS) runs on B.Cu only, never as a track on F.Cu.
   **Safety note for the risk assessment:** unlike rev B, HVBUS now has through‑vias. Their plated barrels end at the front surface, tented under solder mask (no F.Cu track, 0.5 mm to the front GND pour). Solder mask is not rated insulation, so the front is no longer free of unlimited‑HV copper; check this against the touch/creepage argument in the risk assessment, or use blind B.Cu–In2 vias if the fab offers them.
   GND pour on F.Cu and B.Cu (SMD pads solid, THT pads with
   thermal spokes, USB shell solid); all vias tented.
@@ -215,10 +221,14 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 
   | Class | Nets | Track | Clearance | Via | Layers |
   |---|---|---|---|---|---|
-  | **HVBUS** | HV+, SW, SNUB (unlimited 105 V source) | 0.3 mm | **0.5 mm** | – | **B.Cu only** (enforced in `route.py`, verified: 0 items on the front) |
+  | **HVBUS** | HV+, SW, snubber node Net-(C8-Pad1) (unlimited 105 V source) | 0.3 mm | **0.5 mm** | – | **B.Cu only** (enforced in `route.py`, verified: 0 items on the front) |
   | HV | lamp anode / cathode nets, FB_MID (current‑limited through ≥ 150 k) | 0.3 mm | 0.5 mm | 0.7/0.35 | both |
-  | PWR | VBUS, +5V, GND | 0.4 mm | 0.15 mm | 0.7/0.35 | both |
-  | Default | everything else | 0.2 mm | 0.15 mm | 0.6/0.3 | both |
+
+  `NeonPine.kicad_dru` relaxes the clearance to 0.2 mm **inside the courtyards of Q11–Q20 only**: the SOT‑363 itself puts
+  its collector pins 0.3 mm from base/emitter. Freerouting does not read custom rules, so expect to hand‑route the
+  collector/base fan‑outs (or let Freerouting route the rest and finish these by hand).
+  | PWR | VBUS, VBUS_F, +5V, GND | 0.4 mm | 0.15 mm | 0.7/0.35 | both |
+  | Default | everything else | 0.15 mm | 0.15 mm | 0.6/0.3 | both |
 
 * **Placement:**
   * Fixed by hand: the lamps and their R/R/Q stacks, J1, U1, Q1, L11, the input protection D3/F1 (right above USB‑C),

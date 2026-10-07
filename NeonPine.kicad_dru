@@ -1,0 +1,8 @@
+(version 1)
+
+# Lamp switches Q11-Q20 are MMDT5551 (dual 160 V NPN, SOT-363): the package itself puts the collectors (lamp nodes, HV class,
+# current-limited through 150k) 0.3 mm from base/emitter pins. The 0.5 mm HV clearance therefore cannot hold at the pins;
+# relax it only for copper inside the transistor courtyards, i.e. the pads themselves and the fan-out stubs.
+(rule "SOT-363 lamp switch pin pitch"
+	(constraint clearance (min 0.2mm))
+	(condition "(A.NetClass == 'HV' || B.NetClass == 'HV') && ((A.intersectsCourtyard('Q1?') && B.intersectsCourtyard('Q1?')) || (A.intersectsCourtyard('Q20') && B.intersectsCourtyard('Q20')))"))

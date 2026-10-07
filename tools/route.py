@@ -20,13 +20,14 @@ if not keep:
 zones = seq(b.Zones())
 for z in zones: b.Remove(z)                    # pours would be exported as blocking planes
 assert pcbnew.ExportSpecctraDSN(b, dsn), 'DSN export failed'
-# HVBUS (the unlimited 105 V supply) may use B.Cu and both inner layers, but never run as a track on the front copper.
+# HVBUS (the unlimited 105 V supply) may use B.Cu (and both inner layers on a 4-layer board), but never run as a track on the front copper.
 # Its through-vias do reach the front surface (tented, under solder mask) - see DESIGN.md 5 / risk assessment.
 txt = open(dsn).read()
 i = txt.find('(class HVBUS')
 assert i >= 0, 'HVBUS class missing in DSN'
 j = txt.find('(circuit', i)
-txt = txt[:j] + '(circuit\n        (use_layer B.Cu In1.Cu In2.Cu)' + txt[j + len('(circuit'):]
+hv_layers = ' '.join(['B.Cu'] + (['In1.Cu', 'In2.Cu'] if b.GetCopperLayerCount() == 4 else []))   # 2-layer board: B.Cu only
+txt = txt[:j] + '(circuit\n        (use_layer %s)' % hv_layers + txt[j + len('(circuit'):]
 open(dsn, 'w').write(txt)
 subprocess.run(['java', '-jar', jar, '-de', dsn, '-do', ses, '-mp', passes, '--gui.enabled=false'], check=True)
 assert pcbnew.ImportSpecctraSES(b, ses), 'SES import failed'

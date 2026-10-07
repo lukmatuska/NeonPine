@@ -17,9 +17,9 @@ SC = 1.0
 sc = lambda *v: tuple(round(a * SC, 3) for a in v)
 
 # ---------------- net classes (written to the project file before the board is created)
-HV_PAT = ['Net-(LA*', 'Net-(Q??-C)', 'Net-(R5-Pad2)']          # lamp nets: behind 150k, may use both layers
-HVBUS_PAT = ['/HV+', '/SW', '/SNUB']                            # unlimited 105 V source: never as tracks on F.Cu (route.py)
-PWR_PAT = ['/VBUS', '+5V', 'GND']
+HV_PAT = ['Net-(LA*', 'Net-(Q???-C?)', 'Net-(R5-Pad2)']          # lamp nets: behind 150k, may use both layers
+HVBUS_PAT = ['/HV+', '/SW', 'Net-(C8-Pad1)']                            # unlimited 105 V source: never as tracks on F.Cu (route.py)
+PWR_PAT = ['/VBUS', '/VBUS_F', '+5V', 'GND']
 def write_project():
     def cls(name, clr, tw, vd=0.6, vdr=0.3, prio=0):
         return dict(name=name, clearance=clr, track_width=tw, via_diameter=vd, via_drill=vdr,
@@ -31,13 +31,20 @@ def write_project():
                      "min_via_diameter": 0.5, "min_through_hole_diameter": 0.3, "min_copper_edge_clearance": 0.3,
                      "min_hole_clearance": 0.25, "min_hole_to_hole": 0.25}}},
            "net_settings": {"meta": {"version": 4},
-                            "classes": [cls('Default', 0.15, 0.2), cls('HV', 0.5, 0.3, 0.7, 0.35, 1),
+                            "classes": [cls('Default', 0.15, 0.15), cls('HV', 0.5, 0.3, 0.7, 0.35, 1),
                                         cls('PWR', 0.15, 0.4, 0.7, 0.35, 2),
                                         cls('HVBUS', 0.5, 0.3, 0.7, 0.35, 3)],
                             "netclass_patterns": [{"netclass": "HV", "pattern": p} for p in HV_PAT] +
                                                  [{"netclass": "PWR", "pattern": p} for p in PWR_PAT] +
                                                  [{"netclass": "HVBUS", "pattern": p} for p in HVBUS_PAT]}}
-    json.dump(prj, open(os.path.join(PRJ, 'NeonPine.kicad_pro'), 'w'), indent=2)
+    fn = os.path.join(PRJ, 'NeonPine.kicad_pro')
+    old = json.load(open(fn)) if os.path.exists(fn) else {}   # keep everything else KiCad stored in the project
+    def merge(dst, src):
+        for k, v in src.items():
+            if isinstance(v, dict) and isinstance(dst.get(k), dict): merge(dst[k], v)
+            else: dst[k] = v
+    merge(old, prj)
+    json.dump(old, open(fn, 'w'), indent=2)
 
 # ---------------- outline: star + 3 tiers + pot
 def P(x, y): return pcbnew.VECTOR2I(MM(OX + x), MM(OY + y))
@@ -89,17 +96,23 @@ FIXED = {
     'U3': (*sc(19.4, 51.8), 180, 'B'),
 }
 # every lamp hangs down from its pad pair (pad 1 = K on the left, pad 2 = A on the right). On the back under the lamp body
-# sit two stacks, each next to its own lamp pad: K side (pull-up R3n, base R4n, switch Q1n) and A side (R2n, R5n, Q2n).
-# All stack parts stand vertical, so one column is only 2.5 mm wide (SOT-23 at 90 deg); a lamp's two columns are 5.7 mm wide.
-# Top to bottom: pull-up (rot 270: HV+ pad on top, 0.5 mm below the lamp pad; lamp-node pad at the bottom, touching distance to
-# the collector), switch (collector on top), base resistor 0402 (base pad on top, drive line at the bottom).
-SX = 1.6
+# sits one stack per lamp, 5.4 mm wide and 6.3 mm tall:
+#   * pull-ups R3n (K, left) and R2n (A, right): 0603 HV types standing vertical (rot 270: HV+ pad on top, 0.5 mm below the
+#     lamp pad; lamp-node pad at the bottom),
+#   * Q1n = MMDT5551 (SOT-363) centred below them. Seen on the back at rot 0 its left pin column is C1 (K collector, top-left,
+#     right under R3n), B2, E2 and its right column E1, B1, C2 (A collector, bottom-right: reaches the A node through a via),
+#   * base resistors 0402 standing beside the transistor, each level with its base pin: R5n (A side, B2) on the left,
+#     R4n (K side, B1) on the right (base pad on top, drive line at the bottom).
+# SOT-363 pins are 0.3 mm apart, so the HV clearance is relaxed inside the transistor courtyards (NeonPine.kicad_dru).
+SX, SB = 1.6, 2.2           # pull-up / base-resistor column offset from the lamp centre
+YR, YQ = 2.5, 5.2           # pull-up / transistor centre below the lamp pads
 for n, (x, ya) in LAMPS.items():
     FIXED[f'LA{n}'] = (x, ya, 0, 'F')
-    for side, (rp, rb, q) in ((-1, (30 + n, 40 + n, 10 + n)), (1, (20 + n, 50 + n, 20 + n))):
-        FIXED[f'R{rp}'] = (x + side * SX, ya + 2.7, 270, 'B')
-        FIXED[f'Q{q}'] = (x + side * SX, ya + 6.05, 90, 'B')
-        FIXED[f'R{rb}'] = (x + side * SX, ya + 8.75, 90, 'B')
+    FIXED[f'R{30 + n}'] = (x - SX, ya + YR, 270, 'B')
+    FIXED[f'R{20 + n}'] = (x + SX, ya + YR, 270, 'B')
+    FIXED[f'Q{10 + n}'] = (x, ya + YQ, 0, 'B')
+    FIXED[f'R{50 + n}'] = (x - SB, ya + YQ, 90, 'B')
+    FIXED[f'R{40 + n}'] = (x + SB, ya + YQ, 90, 'B')
 # everything else is placed by the optimiser (optimise()), starting from these rough positions (all on the back)
 START = {r: (*sc(x, y), rot) for r, (x, y, rot) in {
     'D1': (-8.75, 50.5, 90), 'C4': (0, 47.6, 0), 'D2': (0, 52.85, 90),
@@ -426,7 +439,7 @@ def main(netfile):
     write_project()
     comps = load_netlist(netfile)
     board = pcbnew.NewBoard(PCB)
-    board.SetCopperLayerCount(4)        # F.Cu / In1 + In2 = signals, +5V and the HV supply / B.Cu (all SMD parts)
+    board.SetCopperLayerCount(2)        # F.Cu / B.Cu (all SMD parts); 2 layers to save cost
     ol = outline()
     # edge cuts
     o = ol.Outline(0)
