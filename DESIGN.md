@@ -8,6 +8,8 @@
 > the low‑voltage passives are 0402, the shift registers are DHVQFN‑16, D1/D2 moved to SOD‑123F, and the
 > lamps moved slightly (tier 1 ±4.5 mm at y 21.5, tier 2 ±8 mm at y 34, tier 3 ±5/±14 mm at y 46.3), and the board is 2 layers.
 > U2 sits in the centre of tier 3, U3 in the right wing next to lamps 9/10.
+> **2026‑10‑08:** SR_DATA/SR_CLK moved to the SPI1 pins PC6/PC5; LAMP6/LAMP9 moved to PD6/PA1, and the board is re‑routed
+> (0 unconnected). R13 (33 Ω 0402, SPI clock series resistor, PC5 → SR_CLK) is in the schematic but **not yet placed on the PCB**.
 > **Routing status (2 layers, 2026‑10‑08): fully routed** (Freerouting + scripted SOT‑363 fan‑outs + hand routing, U2 QE–QG
 > swapped by hand). 0 unconnected, 0 errors with the HVBUS/PWR pattern fixes; the hand edits (J2, U3, Q15/R55 around lamp 5)
 > live only in the board file – `tools/pcb.py` would not reproduce them.
@@ -152,9 +154,9 @@ light reflected off a hand.
 ### 2.5 MCU pin map – CH32V003F4P6 (TSSOP‑20)
 | Pin (port) | Function |
 |---|---|
-| 10–17 (PC0–PC7) | Cathode‑side switches of lamps **L7, L4, L2, L5, L3, L9, L6, L10**. All eight on port C, so one port write per BAM slot |
-| 8 (PD0) | Cathode‑side switch of **L8** |
-| 3 (PD6) / 5 (PA1) / 1 (PD4) | **SR_DATA / SR_CLK / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK) |
+| 10–14, 17 (PC0–PC4, PC7) | Cathode‑side switches of lamps **L7, L4, L2, L5, L3, L10** |
+| 8 (PD0) / 3 (PD6) / 5 (PA1) | Cathode‑side switches of **L8 / L6 / L9**. The cathode side is now spread over ports C, D and A: three port writes per BAM slot |
+| 16 (PC6) / 15 (PC5) / 1 (PD4) | **SR_DATA (SPI1 MOSI) / SR_CLK (SPI1 SCK, via R13 33 Ω: net SR_SCK → SR_CLK) / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK). Hardware SPI (+ DMA) shifts the 16 bits in the background; the firmware only pulses the latch at the slot edge |
 | 19 (PD2) | TIM1_CH1 → boost gate (via R1) |
 | 20 (PD3) | A4 – HV feedback |
 | 2 (PD5) | A5 – light sensor |
@@ -164,8 +166,8 @@ light reflected off a hand.
 
 **Shift registers (2 × 74HC595BQ, DHVQFN‑16 2.5 × 3.5 mm; exposed pad = GND (footprint `NeonPine:DHVQFN-16-…_EPGND`, EP numbered 8)):** U2 QA–QH = L8A, L7A, L4A, L2A, L1A, **L1 (cathode side)**, L5A, L3A;
 U3 QE = L10A, QF = L9A, QH = L6A (QA–QD, QG unused). /OE is tied low and /SRCLR high: the outputs are random until the first latch,
-which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit shift + latch per BAM slot
-(8 slots per ≈ 1 ms frame) is a few µs of CPU time.
+which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit SPI transfer + latch per BAM slot
+(8 slots per ≈ 1 ms frame): at 6 MHz SCK the transfer takes ≈ 2.7 µs and runs by SPI/DMA during the previous slot.
 
 The lamp‑to‑pin order (MCU pins and shift‑register outputs) comes from `tools/pinswap.py` (stored in `tools/lamp_pins.json`).
 **The firmware maps lamp index → port bit through a table.**

@@ -1,0 +1,8 @@
+# KiCad lock / autosave / cache
+~*.lck
+_autosave-*
+*.kicad_prl.bak
+fp-info-cache
+# Freerouting exchange files
+*.dsn
+*.ses

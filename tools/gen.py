@@ -38,7 +38,7 @@ P('R5','Device','R',208.28,40.64,'1M',R06,{'1':'HV+','2':'FB_MID'})
 P('R6','Device','R',208.28,53.34,'1M',R06,{'1':'FB_MID','2':'VFB'})
 P('R7','Device','R',208.28,66.04,'39k',R04,{'1':'VFB','2':'GND'})
 P('C5','Device','C',218.44,66.04,'10n',C04,{'1':'VFB','2':'GND'})
-# --- MCU. Lamp -> pin map (PC0-7 = pins 10-17, PD0 = 8, PD4 = 1) comes from tools/pinswap.py when present
+# --- MCU. Lamp -> pin map (PC0-4,PC7 = pins 10-14,17; PD0 = 8, PD6 = 3, PA1 = 5) comes from tools/pinswap.py when present
 _lp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'lamp_pins.json')
 import json
 _j=json.load(open(_lp)) if os.path.exists(_lp) else {}
@@ -46,10 +46,10 @@ SR_SLOTS=_j.get('sr')                       # AC branch format: {"mcu": {pin: LA
 LAMP_PINS=_j['mcu'] if 'mcu' in _j else _j if _j else {'10':'LAMP1','11':'LAMP2','12':'LAMP3','13':'LAMP4','14':'LAMP5',
   '15':'LAMP6','16':'LAMP7','17':'LAMP8','8':'LAMP9','1':'LAMP10'}
 # --- MCU
-LAMP_PINS={k:v for k,v in LAMP_PINS.items() if k not in ('1','3','5')}   # PD4/PD6/PA1 drive the shift registers
+LAMP_PINS={k:v for k,v in LAMP_PINS.items() if k not in ('1','15','16')}   # PD4/PC5/PC6 drive the shift registers (PC5/PC6 = SPI1 SCK/MOSI)
 P('U1','MCU_WCH_RiscV','CH32V003FxPx',60.96,121.92,'CH32V003F4P6','Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm',
   {**LAMP_PINS, '18':'SWIO','19':'GATE_DRV','20':'VFB','2':'LDR','4':'NRST',
-   '5':'SR_CLK','6':'TOUCH2','3':'SR_DATA','1':'SR_LATCH','9':'+5V','7':'GND'})
+   '15':'SR_SCK','6':'TOUCH2','16':'SR_DATA','1':'SR_LATCH','9':'+5V','7':'GND'})
 P('C6','Device','C',101.6,106.68,'100n',C04,{'1':'+5V','2':'GND'})
 P('C7','Device','C',101.6,129.54,'100n',C04,{'1':'NRST','2':'GND'})
 P('J2','Connector_Generic','Conn_01x03',101.6,149.86,'SWD pogo pads','NeonPine:Pogo_1x03_P2.54mm',
@@ -109,13 +109,14 @@ P('U3','74xx','74HC595',309.88,124.46,'74HC595BQ','NeonPine:DHVQFN-16-1EP_2.5x3.
   {**srn(1),'14':'SR_CHAIN','11':'SR_CLK','12':'SR_LATCH','10':'+5V','13':'GND','16':'+5V','8':'GND'})
 P('C9','Device','C',233.68,149.86,'100n',C04,{'1':'+5V','2':'GND'})
 P('C10','Device','C',287.02,149.86,'100n',C04,{'1':'+5V','2':'GND'})
+P('R13','Device','R',215.9,124.46,'33',R04,{'1':'SR_SCK','2':'SR_CLK'})   # SPI clock series R: edge rate / EMC (SR_CLK runs 39 mm on F.Cu)
 
 notes=[(25.4,25.4,'POWER IN – USB-C 5V, TVS D3, PTC F1, ferrite FB1'),(119.38,25.4,'HV BOOST 75–100 V (MCU-controlled, TIM1 30 kHz)'),
  (25.4,96.52,'MCU CH32V003F4P6 (runs at 5 V)'),(132.08,96.52,'INPUTS – LDR, TKEY touch pads, spare pad'),
  (25.4,177.8,'NEON LAMPS – Brightmaster NEON-3 (strike ≤90 VDC, ~60 V settled). Each lead: 150k (200 V type) to HV+ and one half of an MMDT5551 (160 V) to GND. Pull one lead low: that electrode glows.'),
  (25.4,181.61,'I_lamp = (V_HV - 60 V)/150k ≈ 0.1–0.3 mA, plus V_HV/150k ≈ 0.7 mA lost in the pulled-low lead\'s own pull-up. Both off: dark, no current.'),
  (228.6,96.52,'LAMP DRIVE – 2 × 74HC595: LAMPA1–10 (anode-side switches) + the one cathode switch the MCU has no pin for'),
- (228.6,100.33,'SR_DATA = PD6, SR_CLK = PA1, SR_LATCH = PD4. /OE tied low: outputs are random until the first latch, but the boost is off then (R2).'),
+ (228.6,100.33,'SR_DATA = PC6 (SPI1 MOSI), SR_CLK = PC5 (SPI1 SCK), SR_LATCH = PD4. /OE tied low: outputs are random until the first latch, but the boost is off then (R2).'),
  (119.38,81.28,'Q1 DMN15H310SE: 150 V, 0.33 Ω @ Vgs=5 V. R2 keeps boost off during reset.'),
  (119.38,85.09,'D2 = hard OVP clamp (Vbr 111–123 V). R12/C8 snubber: optional (DNP).')]
 

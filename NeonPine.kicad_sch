@@ -4339,7 +4339,7 @@
 		)
 		(uuid "c76e1faf-11fc-5e6a-b7df-577339afdda3")
 	)
-	(text "SR_DATA = PD6, SR_CLK = PA1, SR_LATCH = PD4. /OE tied low: outputs are random until the first latch, but the boost is off then (R2)."
+	(text "SR_DATA = PC6 (SPI1 MOSI), SR_CLK = PC5 (SPI1 SCK), SR_LATCH = PD4. /OE tied low: outputs are random until the first latch, but the boost is off then (R2)."
 		(exclude_from_sim no)
 		(at 228.6 100.33 0)
 		(effects
@@ -5283,6 +5283,16 @@
 	)
 	(wire
 		(pts
+			(xy 215.9 128.27) (xy 215.9 130.81)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2de681c7-d4c1-42d4-b1be-9545492756a9")
+	)
+	(wire
+		(pts
 			(xy 175.26 204.47) (xy 172.72 204.47)
 		)
 		(stroke
@@ -6020,6 +6030,16 @@
 			(type default)
 		)
 		(uuid "76788b23-252c-52a1-ba0f-2156e3349bc0")
+	)
+	(wire
+		(pts
+			(xy 215.9 120.65) (xy 215.9 118.11)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "77032881-98d7-4ea3-a145-56dc8f56d686")
 	)
 	(wire
 		(pts
@@ -7301,6 +7321,16 @@
 		)
 		(uuid "ffdae210-9c0c-5501-b545-7aefdf0a2d08")
 	)
+	(label "SR_SCK"
+		(at 215.9 118.11 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "07d26c60-5a96-4047-83d8-ef2bb454a065")
+	)
 	(label "NRST"
 		(at 73.66 127 0)
 		(effects
@@ -7431,7 +7461,7 @@
 		)
 		(uuid "30deed34-9b3c-55fb-b9e2-f9ea03d32370")
 	)
-	(label "SR_DATA"
+	(label "LAMP6"
 		(at 73.66 124.46 0)
 		(effects
 			(font
@@ -7721,7 +7751,7 @@
 		)
 		(uuid "81672b5a-7e83-56c0-b1a0-d1db61fe0f2a")
 	)
-	(label "LAMP9"
+	(label "SR_SCK"
 		(at 48.26 121.92 180)
 		(effects
 			(font
@@ -7740,6 +7770,16 @@
 			(justify right bottom)
 		)
 		(uuid "83b17585-4a07-5c2f-bbfe-fb8d52efb518")
+	)
+	(label "SR_CLK"
+		(at 215.9 130.81 270)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right bottom)
+		)
+		(uuid "8740be45-ef35-4601-bf7c-cc2f668551bf")
 	)
 	(label "SR_DATA"
 		(at 243.84 114.3 180)
@@ -7821,7 +7861,7 @@
 		)
 		(uuid "a7886dc6-c7db-584b-8950-7b0bda7c4960")
 	)
-	(label "SR_CLK"
+	(label "LAMP9"
 		(at 73.66 132.08 0)
 		(effects
 			(font
@@ -8051,7 +8091,7 @@
 		)
 		(uuid "f6290faf-2ce5-5902-98f4-7e11ed2e46ef")
 	)
-	(label "LAMP6"
+	(label "SR_DATA"
 		(at 48.26 124.46 180)
 		(effects
 			(font
@@ -11823,6 +11863,87 @@
 			(project "NeonPine"
 				(path "/f460b743-0f84-4eb6-8cd0-caf2149a2015"
 					(reference "C2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 215.9 124.46 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "522efb04-297c-47b4-aeaf-aa72a3ea3d31")
+		(property "Reference" "R13"
+			(at 220.98 123.19 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "33"
+			(at 220.98 125.73 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0402_1005Metric"
+			(at 215.9 124.46 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 215.9 124.46 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 215.9 124.46 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "ea8b9a61-fbc6-4c37-bc64-04b533a03ca2")
+		)
+		(pin "2"
+			(uuid "e9c424e9-778a-48b1-88a2-3f40dd0cfc45")
+		)
+		(instances
+			(project "NeonPine"
+				(path "/f460b743-0f84-4eb6-8cd0-caf2149a2015"
+					(reference "R13")
 					(unit 1)
 				)
 			)
