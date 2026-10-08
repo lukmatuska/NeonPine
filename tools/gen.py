@@ -10,34 +10,40 @@ R06='Resistor_SMD:R_0603_1608Metric'; R12='Resistor_SMD:R_1206_3216Metric'
 C06='Capacitor_SMD:C_0603_1608Metric'
 R04='Resistor_SMD:R_0402_1005Metric'; C04='Capacitor_SMD:C_0402_1005Metric'   # low-voltage passives (0402: 50 V max)
 parts=[]  # (ref,lib,name,x,y,value,fp,{pin:net},dnp,unit)
+# BOM fields (JLCPCB/LCSC upload): manufacturer part numbers, descriptions, pad-only parts kept out of the BOM
+MPN={'D2': 'SMF100A', 'D3': 'SMF5.0A', 'F1': 'MF-NSMF050-2', 'J1': 'USB4125-GF-A', 'L11': 'SWPA6028S331MT', 'LA1': 'NEON-3', 'LA2': 'NEON-3', 'LA3': 'NEON-3', 'LA4': 'NEON-3', 'LA5': 'NEON-3', 'LA6': 'NEON-3', 'LA7': 'NEON-3', 'LA8': 'NEON-3', 'LA9': 'NEON-3', 'LA10': 'NEON-3', 'Q1': 'DMN15H310SE', 'Q2': 'TEPT4400', 'Q11': 'MMDT5551(RANGE:100-300)', 'Q12': 'MMDT5551(RANGE:100-300)', 'Q13': 'MMDT5551(RANGE:100-300)', 'Q14': 'MMDT5551(RANGE:100-300)', 'Q15': 'MMDT5551(RANGE:100-300)', 'Q16': 'MMDT5551(RANGE:100-300)', 'Q17': 'MMDT5551(RANGE:100-300)', 'Q18': 'MMDT5551(RANGE:100-300)', 'Q19': 'MMDT5551(RANGE:100-300)', 'Q20': 'MMDT5551(RANGE:100-300)', 'U1': 'CH32V003F4P6', 'U2': '74HC595BQ,115', 'U3': '74HC595BQ,115'}
+DESC={'C1': 'MLCC X5R/X7R, 10 V or more', 'C2': 'MLCC X7R, 16 V or more', 'C6': 'MLCC X7R, 16 V or more', 'C7': 'MLCC X7R, 16 V or more', 'C9': 'MLCC X7R, 16 V or more', 'C10': 'MLCC X7R, 16 V or more', 'C3': 'MLCC X5R/X7R', 'C4': 'MLCC X7R, HV rail bulk cap', 'C5': 'MLCC X7R, ADC filter', 'C8': 'Snubber cap, not fitted by default', 'D1': 'Boost rectifier, SOD-123F; part number not chosen yet', 'D2': 'TVS 100 V, HV rail clamp', 'D3': 'TVS 5 V, USB VBUS', 'F1': 'PTC resettable fuse 0.5 A hold', 'FB1': 'Ferrite bead', 'J1': 'USB-C power-only receptacle, 6 pin', 'L11': 'Shielded power inductor 6x6 mm, Isat >= 0.4 A', 'LA1': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA2': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA3': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA4': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA5': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA6': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA7': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA8': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA9': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'LA10': 'Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered', 'Q2': 'Ambient light phototransistor, THT', 'Q11': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q12': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q13': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q14': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q15': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q16': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q17': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q18': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q19': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'Q20': 'Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)', 'R12': 'Snubber, not fitted by default', 'R13': 'SPI clock series resistor', 'R21': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R22': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R23': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R24': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R25': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R26': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R27': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R28': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R29': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R30': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R31': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R32': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R33': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R34': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R35': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R36': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R37': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R38': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R39': 'Thick film, >= 200 V working voltage (e.g. RCV0603)', 'R40': 'Thick film, >= 200 V working voltage (e.g. RCV0603)'}
+LCSC={'Q11': 'C148105', 'Q12': 'C148105', 'Q13': 'C148105', 'Q14': 'C148105', 'Q15': 'C148105', 'Q16': 'C148105', 'Q17': 'C148105', 'Q18': 'C148105', 'Q19': 'C148105', 'Q20': 'C148105'}
+NOBOM=['J2', 'TP2', 'TP3']
+
 def P(ref,lib,name,x,y,val,fp,nets,dnp=False,unit=1): parts.append((ref,lib,name,x,y,val,fp,nets,dnp,unit))
 # --- power in
-P('J1','Connector','USB_C_Receptacle_PowerOnly_6P',35.56,55.88,'USB-C 6P (USB4125-GF-A)','Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal',
+P('J1','Connector','USB_C_Receptacle_PowerOnly_6P',35.56,55.88,'USB4125-GF-A','Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal',
   {'A9':'VBUS','B9':'VBUS','A5':'CC1','B5':'CC2','A12':'GND','B12':'GND','SH':'GND'})
-P('R3','Device','R',60.96,68.58,'5k1',R04,{'1':'CC1','2':'GND'})
-P('R4','Device','R',68.58,68.58,'5k1',R04,{'1':'CC2','2':'GND'})
-P('F1','Device','Polyfuse',76.2,45.72,'PTC 0.5A (MF-NSMF050-2)','Fuse:Fuse_1206_3216Metric',{'1':'VBUS_F','2':'VBUS'})
-P('FB1','Device','FerriteBead_Small',83.82,68.58,'600R@100MHz','Inductor_SMD:L_0603_1608Metric',{'1':'VBUS_F','2':'+5V'})
-P('D3','Device','D_Zener',50.8,76.2,'SMF5.0A (TVS)','Diode_SMD:D_SOD-123F',{'1':'VBUS','2':'GND'})
-P('C1','Device','C',91.44,48.26,'10u',C06,{'1':'+5V','2':'GND'})
-P('C2','Device','C',104.14,48.26,'100n',C04,{'1':'+5V','2':'GND'})
+P('R3','Device','R',60.96,68.58,'5.1kΩ',R04,{'1':'CC1','2':'GND'})
+P('R4','Device','R',68.58,68.58,'5.1kΩ',R04,{'1':'CC2','2':'GND'})
+P('F1','Device','Polyfuse',76.2,45.72,'MF-NSMF050-2','Fuse:Fuse_1206_3216Metric',{'1':'VBUS_F','2':'VBUS'})
+P('FB1','Device','FerriteBead_Small',83.82,68.58,'600Ω@100MHz','Inductor_SMD:L_0603_1608Metric',{'1':'VBUS_F','2':'+5V'})
+P('D3','Device','D_Zener',50.8,76.2,'SMF5.0A','Diode_SMD:D_SOD-123F',{'1':'VBUS','2':'GND'})
+P('C1','Device','C',91.44,48.26,'10uF',C06,{'1':'+5V','2':'GND'})
+P('C2','Device','C',104.14,48.26,'100nF',C04,{'1':'+5V','2':'GND'})
 P('#FLG01','power','PWR_FLAG',86.36,35.56,'PWR_FLAG','',{'1':'+5V'})
 P('#FLG02','power','PWR_FLAG',35.56,83.82,'PWR_FLAG','',{'1':'GND'})
 # --- boost
-P('C3','Device','C',121.92,48.26,'22u 10V','Capacitor_SMD:C_0805_2012Metric',{'1':'+5V','2':'GND'})
-P('L11','Device','L',134.62,40.64,'330u (SWPA6028S331MT, Isat>=0.4A)','NeonPine:L_6.3x6.3_H3',{'1':'+5V','2':'SW'})
-P('D1','Device','D',152.4,33.02,'200V 1A fast SOD-123F (verify P/N)','Diode_SMD:D_SOD-123F',{'2':'SW','1':'HV+'})
+P('C3','Device','C',121.92,48.26,'22uF 10V','Capacitor_SMD:C_0805_2012Metric',{'1':'+5V','2':'GND'})
+P('L11','Device','L',134.62,40.64,'330uH','NeonPine:L_6.3x6.3_H3',{'1':'+5V','2':'SW'})
+P('D1','Device','D',152.4,33.02,'200V 1A fast recovery','Diode_SMD:D_SOD-123F',{'2':'SW','1':'HV+'})
 P('Q1','Transistor_FET','Q_NMOS_GDS',144.78,58.42,'DMN15H310SE','Package_TO_SOT_SMD:SOT-223-3_TabPin2',{'1':'GATE','2':'SW','3':'GND'})
-P('R1','Device','R',129.54,68.58,'47',R04,{'1':'GATE_DRV','2':'GATE'})
-P('R2','Device','R',137.16,68.58,'100k',R04,{'1':'GATE','2':'GND'})
-P('C4','Device','C',170.18,48.26,'1u 250V','Capacitor_SMD:C_1210_3225Metric',{'1':'HV+','2':'GND'})
+P('R1','Device','R',129.54,68.58,'47Ω',R04,{'1':'GATE_DRV','2':'GATE'})
+P('R2','Device','R',137.16,68.58,'100kΩ',R04,{'1':'GATE','2':'GND'})
+P('C4','Device','C',170.18,48.26,'1uF 250V','Capacitor_SMD:C_1210_3225Metric',{'1':'HV+','2':'GND'})
 P('D2','Device','D_Zener',185.42,48.26,'SMF100A','Diode_SMD:D_SOD-123F',{'1':'HV+','2':'GND'})
-P('R12','Device','R',228.6,40.64,'100 (snubber)','Resistor_SMD:R_0805_2012Metric',{'1':'SW','2':'SNUB'},dnp=True)
-P('C8','Device','C',228.6,53.34,'100p C0G 250V','Capacitor_SMD:C_0805_2012Metric',{'1':'SNUB','2':'GND'},dnp=True)
-P('R5','Device','R',208.28,40.64,'1M',R06,{'1':'HV+','2':'FB_MID'})
-P('R6','Device','R',208.28,53.34,'1M',R06,{'1':'FB_MID','2':'VFB'})
-P('R7','Device','R',208.28,66.04,'39k',R04,{'1':'VFB','2':'GND'})
-P('C5','Device','C',218.44,66.04,'10n',C04,{'1':'VFB','2':'GND'})
+P('R12','Device','R',228.6,40.64,'100Ω','Resistor_SMD:R_0805_2012Metric',{'1':'SW','2':'SNUB'},dnp=True)
+P('C8','Device','C',228.6,53.34,'100pF 250V C0G','Capacitor_SMD:C_0805_2012Metric',{'1':'SNUB','2':'GND'},dnp=True)
+P('R5','Device','R',208.28,40.64,'1MΩ',R06,{'1':'HV+','2':'FB_MID'})
+P('R6','Device','R',208.28,53.34,'1MΩ',R06,{'1':'FB_MID','2':'VFB'})
+P('R7','Device','R',208.28,66.04,'39kΩ',R04,{'1':'VFB','2':'GND'})
+P('C5','Device','C',218.44,66.04,'10nF',C04,{'1':'VFB','2':'GND'})
 # --- MCU. Lamp -> pin map (PC0-4,PC7 = pins 10-14,17; PD0 = 8, PD6 = 3, PA1 = 5) comes from tools/pinswap.py when present
 _lp=os.path.join(os.path.dirname(os.path.abspath(__file__)),'lamp_pins.json')
 import json
@@ -50,15 +56,15 @@ LAMP_PINS={k:v for k,v in LAMP_PINS.items() if k not in ('1','15','16')}   # PD4
 P('U1','MCU_WCH_RiscV','CH32V003FxPx',60.96,121.92,'CH32V003F4P6','Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm',
   {**LAMP_PINS, '18':'SWIO','19':'GATE_DRV','20':'VFB','2':'LDR','4':'NRST',
    '15':'SR_SCK','6':'TOUCH2','16':'SR_DATA','1':'SR_LATCH','9':'+5V','7':'GND'})
-P('C6','Device','C',101.6,106.68,'100n',C04,{'1':'+5V','2':'GND'})
-P('C7','Device','C',101.6,129.54,'100n',C04,{'1':'NRST','2':'GND'})
+P('C6','Device','C',101.6,106.68,'100nF',C04,{'1':'+5V','2':'GND'})
+P('C7','Device','C',101.6,129.54,'100nF',C04,{'1':'NRST','2':'GND'})
 P('J2','Connector_Generic','Conn_01x03',101.6,149.86,'SWD pogo pads','NeonPine:Pogo_1x03_P2.54mm',
   {'1':'+5V','2':'SWIO','3':'GND'})
 # --- inputs
 P('Q2','Device','Q_Photo_NPN',137.16,111.76,'TEPT4400','LED_THT:LED_D3.0mm',{'1':'+5V','2':'LDR'})
-P('R9','Device','R',137.16,127,'22k',R04,{'1':'LDR','2':'GND'})
+P('R9','Device','R',137.16,127,'22kΩ',R04,{'1':'LDR','2':'GND'})
 P('TP2','Connector','TestPoint',175.26,111.76,'Touch trunk','NeonPine:TouchPad_D4.0mm_Masked',{'1':'TP_TRUNK'})
-P('R11','Device','R',175.26,124.46,'1k',R04,{'1':'TP_TRUNK','2':'TOUCH2'})
+P('R11','Device','R',175.26,124.46,'1kΩ',R04,{'1':'TP_TRUNK','2':'TOUCH2'})
 P('TP3','Connector','TestPoint',198.12,111.76,'SR_CLK test','TestPoint:TestPoint_Pad_1.5x1.5mm',{'1':'SR_CLK'})
 # --- lamps (x 10): each lead has a 150k pull-up to HV+ and one half of an MMDT5551 (dual 160 V NPN, SOT-363) to GND
 # (an H-bridge per lamp: unit 1 = K side, unit 2 = A side). The pull-ups see up to 105 V (123 V at the D2 clamp), so they
@@ -76,14 +82,14 @@ for n in range(1,11):
     def M(ref,*a,rot=0,props=None,unit=1):
         P(ref,*a,unit=unit); MANUAL.add(ref); ROT[ref]=rot
         if props: PROPS[ref]=props
-    M(f'R{20+n}','Device','R',xa,yN-6.35,'150k 200V',R06,{'1':'HV+','2':f'A{n}'})
-    M(f'R{30+n}','Device','R',xk,yN-6.35,'150k 200V',R06,{'1':'HV+','2':f'K{n}'})
+    M(f'R{20+n}','Device','R',xa,yN-6.35,'150kΩ 200V',R06,{'1':'HV+','2':f'A{n}'})
+    M(f'R{30+n}','Device','R',xk,yN-6.35,'150kΩ 200V',R06,{'1':'HV+','2':f'K{n}'})
     M(f'LA{n}','Device','Lamp_Neon',mid,yN,'NEON-3','NeonPine:Lamp_Neon_Brightmaster_NEON-3_D4x10_P3.0',{'2':f'A{n}','1':f'K{n}'},
       rot=90,props=(mid,yN-7.62,mid,yN-5.08,None,90))
     M(f'Q{10+n}','Transistor_BJT','Q_Dual_NPN_NPN_E1B1C2E2B2C1',xa-2.54,yN+7.62,'MMDT5551',SOT363,{'3':f'A{n}','4':'GND','5':f'BA{n}'},unit=2)
     M(f'Q{10+n}','Transistor_BJT','Q_Dual_NPN_NPN_E1B1C2E2B2C1',xk-2.54,yN+7.62,'MMDT5551',SOT363,{'6':f'K{n}','1':'GND','2':f'B{n}'},unit=1)
-    M(f'R{50+n}','Device','R',xa-11.43,yN+7.62,'22k',R04,{'1':f'LAMPA{n}','2':f'BA{n}'},rot=90,props=(xa-11.43,yN+5.08,xa-11.43,yN+10.16,None,90))
-    M(f'R{40+n}','Device','R',xk-11.43,yN+7.62,'22k',R04,{'1':f'LAMP{n}','2':f'B{n}'},rot=90,props=(xk-11.43,yN+5.08,xk-11.43,yN+10.16,None,90))
+    M(f'R{50+n}','Device','R',xa-11.43,yN+7.62,'22kΩ',R04,{'1':f'LAMPA{n}','2':f'BA{n}'},rot=90,props=(xa-11.43,yN+5.08,xa-11.43,yN+10.16,None,90))
+    M(f'R{40+n}','Device','R',xk-11.43,yN+7.62,'22kΩ',R04,{'1':f'LAMP{n}','2':f'B{n}'},rot=90,props=(xk-11.43,yN+5.08,xk-11.43,yN+10.16,None,90))
     for x in (xa,xk):
         mw.append(((x,Yr),(x,yN-10.16))); mw.append(((x,yN-2.54),(x,yN))); mw.append(((x,yN),(x,yN+2.54)))
         mw.append(((x,yN+12.7),(x,Yg))); mj.append((x,yN))
@@ -107,9 +113,9 @@ P('U2','74xx','74HC595',256.54,124.46,'74HC595BQ','NeonPine:DHVQFN-16-1EP_2.5x3.
   {**srn(0),'14':'SR_DATA','11':'SR_CLK','12':'SR_LATCH','10':'+5V','13':'GND','9':'SR_CHAIN','16':'+5V','8':'GND'})
 P('U3','74xx','74HC595',309.88,124.46,'74HC595BQ','NeonPine:DHVQFN-16-1EP_2.5x3.5mm_P0.5mm_EP1x2mm_EPGND',
   {**srn(1),'14':'SR_CHAIN','11':'SR_CLK','12':'SR_LATCH','10':'+5V','13':'GND','16':'+5V','8':'GND'})
-P('C9','Device','C',233.68,149.86,'100n',C04,{'1':'+5V','2':'GND'})
-P('C10','Device','C',287.02,149.86,'100n',C04,{'1':'+5V','2':'GND'})
-P('R13','Device','R',215.9,124.46,'33',R04,{'1':'SR_SCK','2':'SR_CLK'})   # SPI clock series R: edge rate / EMC (SR_CLK runs 39 mm on F.Cu)
+P('C9','Device','C',233.68,149.86,'100nF',C04,{'1':'+5V','2':'GND'})
+P('C10','Device','C',287.02,149.86,'100nF',C04,{'1':'+5V','2':'GND'})
+P('R13','Device','R',215.9,124.46,'33Ω',R04,{'1':'SR_SCK','2':'SR_CLK'})   # SPI clock series R: edge rate / EMC (SR_CLK runs 39 mm on F.Cu)
 
 notes=[(25.4,25.4,'POWER IN – USB-C 5V, TVS D3, PTC F1, ferrite FB1'),(119.38,25.4,'HV BOOST 75–100 V (MCU-controlled, TIM1 30 kHz)'),
  (25.4,96.52,'MCU CH32V003F4P6 (runs at 5 V)'),(132.08,96.52,'INPUTS – LDR, TKEY touch pads, spare pad'),
@@ -139,7 +145,7 @@ def place(ref,lib,name,x,y,val,fp,nets,dnp,unit=1,power=False,rot=0):
         s=copy.deepcopy(getsym(lib,name)); s[1]=f'"{lid}"'; syms[lid]=s
     s=syms[lid]
     sym=['symbol',['lib_id',f'"{lid}"'],['at',f'{x:g}',f'{y:g}',str(rot)],['unit',str(unit)],['exclude_from_sim','no'],
-         ['in_bom','no' if power else 'yes'],['on_board','no' if power else 'yes'],['dnp','yes' if dnp else 'no'],['uuid',f'"{U()}"']]
+         ['in_bom','no' if power or ref in NOBOM else 'yes'],['on_board','no' if power else 'yes'],['dnp','yes' if dnp else 'no'],['uuid',f'"{U()}"']]
     if power and rot in (90,270):   # sideways power symbol: value text horizontal, beyond its tip
         left=(rot==90)==(name!='GND')
         sym+= [prop('Reference',ref,x,y+3.81,True),['property','"Value"',f'"{val}"',['at',f'{x-5.08 if left else x+5.08:g}',f'{y:g}','90'],eff(False,'right' if left else 'left')]]
@@ -150,7 +156,9 @@ def place(ref,lib,name,x,y,val,fp,nets,dnp,unit=1,power=False,rot=0):
         sym+= [pr('Reference',ref,rx,ry),pr('Value',val,vx,vy)]
     else:
         sym+= [prop('Reference',ref,x+5.08,y-1.27-(20.32 if ref=='U1' else 0),just='left'),prop('Value',val,x+5.08,y+1.27-(20.32 if ref=='U1' else 0),just='left')]
-    sym+= [prop('Footprint',fp,x,y,True),prop('Datasheet','~',x,y,True),prop('Description','',x,y,True)]
+    sym+= [prop('Footprint',fp,x,y,True),prop('Datasheet','~',x,y,True),prop('Description',DESC.get(ref,''),x,y,True)]
+    if ref in MPN: sym.append(prop('MPN',MPN[ref],x,y,True))
+    if ref in LCSC: sym.append(prop('LCSC',LCSC[ref],x,y,True))
     for no,nm,px,py,a in pins(getsym(lib,name),unit):
         sym.append(['pin',f'"{no}"',['uuid',f'"{U()}"']])
         if no in nets and ref not in MANUAL:

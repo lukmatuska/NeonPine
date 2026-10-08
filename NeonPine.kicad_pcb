@@ -186,7 +186,7 @@
 				(pins "1")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_circle
 			(center 0 0)
@@ -260,11 +260,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "f7eebfce-5c92-446c-bb45-0bc38e7d560e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b752f608-4753-4ed2-ae02-3df88360bf0e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -447,11 +458,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "1a9f7ee1-e79c-44e7-bd30-20c7f9debacc")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "438cac4a-0f70-40e1-b06c-acf2e507ca2c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -634,11 +656,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "eced61b3-6cd9-4380-96e9-7a4d61670a99")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "97ab5f9c-4649-4d7f-abc0-ed4b46f86a27")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -821,11 +854,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "f9a20413-2b46-4b35-b988-2bb91145881d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "3baff4ae-5199-43dc-b0c8-ec8f3f43df7b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1008,11 +1052,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "e0acd01c-4728-4f78-b1cf-4e33373e8c04")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "c0d4f111-119d-4cb4-8393-4baf6c3dbb18")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1195,11 +1250,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "df4c5b8a-1ba8-4d7b-a89f-506a531550f7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "e39cc132-d23a-495a-b02c-744884261c5c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1382,11 +1448,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "7ac5ecbf-895c-4ab1-9bf4-859a95fec96c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "b0ee7e61-8665-4b2b-8458-e16e7c41cb1c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1569,11 +1646,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "fb1bc6ae-ac1d-4854-b5b7-102907d55bc7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "32b9d14e-4f67-4d53-b8f7-aed85b1e5003")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1756,11 +1844,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Ambient light phototransistor, THT"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "ebeb6304-b322-4079-a541-ec5ad877779c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "TEPT4400"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "388cb9b2-3ce9-4259-be80-d6251fd8462d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2094,11 +2193,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "0fff856c-72bb-4302-8be2-ba1cfb667daf")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "85ed6880-d6a3-47b9-b373-6cbf6976f7f2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2281,11 +2391,22 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Brightmaster neon lamp (TME, not stocked at LCSC); hand-soldered"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
 			(uuid "886d8a88-74d6-414b-9c18-9db2a376748a")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "MPN" "NEON-3"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "97e858b7-f735-458c-99db-8af7c2696f53")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2659,7 +2780,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "629b7b7a-5210-467b-ae11-761c61a79924")
@@ -2823,7 +2944,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "c7e71f43-ef71-45b1-bc40-8e1ded729410")
@@ -2987,7 +3108,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "100nF"
 			(at 0 -1.16 90)
 			(layer "B.Fab")
 			(uuid "57cdcb9e-dc45-4eb9-8942-6e201f68a59d")
@@ -3011,7 +3132,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, 16 V or more"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -3151,7 +3272,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100p C0G 250V"
+		(property "Value" "100pF 250V C0G"
 			(at 0 -1.68 0)
 			(layer "B.Fab")
 			(uuid "a5c0a6fc-5da2-4c6d-883d-6e9765a883d9")
@@ -3175,7 +3296,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Snubber cap, not fitted by default"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -3315,7 +3436,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1u 250V"
+		(property "Value" "1uF 250V"
 			(at 0 -2.3 0)
 			(layer "B.Fab")
 			(uuid "ed3584a0-d1d4-4d8b-b1b8-afcd8ee2cfda")
@@ -3339,7 +3460,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, HV rail bulk cap"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -3503,11 +3624,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "b58e8933-5bdf-475e-a58d-f73c47b2dd22")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "54810fbf-0099-403b-8711-16223597581f")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "59e74f56-72d1-4ce4-ac3c-3868eebdd6fa")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3850,7 +3995,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "100nF"
 			(at 0 -1.16 90)
 			(layer "B.Fab")
 			(uuid "6751bf2c-14c4-4fc1-a19a-ee51e765908f")
@@ -3874,7 +4019,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, 16 V or more"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -4038,11 +4183,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "80d7b455-bcd3-4348-b7a7-e574d59d4dc9")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "2bd2a1d0-1bbb-47f2-ab01-aeb2069f90e5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1d4379aa-019a-4b50-a782-d8bbfd043e30")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4385,7 +4554,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "a450d35b-1786-4db2-b14a-e01670422526")
@@ -4549,7 +4718,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "f0c55b5c-da30-49d0-9035-b3fef6bd7cdf")
@@ -4713,7 +4882,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "c84f634b-4977-4f74-92cf-30f642ba371c")
@@ -4877,7 +5046,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "6425b087-3eca-42e6-b818-91bdb15d09b4")
@@ -4901,7 +5070,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -5041,7 +5210,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "39k"
+		(property "Value" "39kΩ"
 			(at 0 -1.17 0)
 			(layer "B.Fab")
 			(uuid "834f87dd-df1e-45d6-b0b6-e0170c8839e7")
@@ -5205,7 +5374,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "1MΩ"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "aace3584-4e04-484f-b0b4-57d4716c18ab")
@@ -5393,11 +5562,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "134f2b91-b490-4c31-9e32-7372edcbc985")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "d879b136-68dd-428b-b987-4fa76d266866")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "37c02895-c5b7-47b2-af4c-0d1e07a917e1")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5740,7 +5933,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "fc3dfc79-a16b-4cd8-9e04-07e27ca574ad")
@@ -5764,7 +5957,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -5933,6 +6126,18 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "3da502f1-580d-41de-be87-4850a5f242ad")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "CH32V003F4P6"
+			(at 0 0 90)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0a03898b-a62f-42eb-afbc-f8c24746819e")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6374,7 +6579,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "2d28be77-32af-4bac-90ae-9e64e4178da9")
@@ -6538,7 +6743,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "f7da2bdf-d550-4cef-b76d-e7b92d077b4a")
@@ -6562,7 +6767,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -6748,7 +6953,7 @@
 				(pins "1" "2" "3")
 			)
 		)
-		(attr smd)
+		(attr smd exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_rect
 			(start -3.6 1.05)
@@ -6820,7 +7025,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "bdf3594d-4a00-45a5-bc27-1d3c60d46916")
@@ -6844,7 +7049,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -6984,7 +7189,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "9c3d77e2-d7c0-47e2-a40f-bc2b039d3df5")
@@ -7008,7 +7213,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -7148,7 +7353,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "10u"
+		(property "Value" "10uF"
 			(at 0 -1.43 0)
 			(layer "B.Fab")
 			(uuid "b429b60b-8a7c-4c93-96b7-a6d3f712e077")
@@ -7172,7 +7377,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X5R/X7R, 10 V or more"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -7336,11 +7541,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "fe660e5f-b4a4-4e52-99de-81c53dd7700c")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "101b7331-d9ef-484b-8f3d-cfa71b7a4685")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "f952b064-5db1-4653-92ac-0699788e953c")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -7683,7 +7912,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "e0426092-93e4-4738-83a5-93fa417909b0")
@@ -7707,7 +7936,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -7871,11 +8100,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "85f00c9a-555a-4219-bc23-5bcc2ed6ee46")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "c9851f01-96cd-486b-8c59-e2c3a75889c5")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "946a72a3-2ca0-4bbe-b54a-567356d1eb79")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8242,11 +8495,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "589a778f-5f9e-4f98-8874-1b2b337e4c79")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "6f0ee1d6-a7ce-4f60-9c83-d7758ee7421e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "6cb542f0-3ab6-4e46-abcc-a7bf1f06a5b9")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8589,7 +8866,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "45ec7d12-3b6e-42e6-a0db-00e50e829fe4")
@@ -8613,7 +8890,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -8753,7 +9030,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "e3984141-3744-4c40-8c66-19bbacd47cd6")
@@ -8917,7 +9194,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "57fb2141-180f-4736-9a0f-11a4815f03dc")
@@ -9081,7 +9358,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "600R@100MHz"
+		(property "Value" "600Ω@100MHz"
 			(at 0 -1.43 0)
 			(layer "B.Fab")
 			(uuid "01645676-2e2e-4dd4-96db-574583f280f5")
@@ -9105,7 +9382,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Ferrite bead"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -9245,7 +9522,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "100nF"
 			(at 0 -1.16 90)
 			(layer "B.Fab")
 			(uuid "85be3be4-ad0e-4a78-8a4f-166283c2e6f7")
@@ -9269,7 +9546,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, 16 V or more"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -9409,7 +9686,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22u 10V"
+		(property "Value" "22uF 10V"
 			(at 0 -1.68 0)
 			(layer "B.Fab")
 			(uuid "e1e70503-04e6-4e0d-89bc-326a47c290f8")
@@ -9433,7 +9710,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X5R/X7R"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -9573,7 +9850,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "0f5266ca-68f8-4a80-b39c-eb191ef6a021")
@@ -9763,12 +10040,26 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "TVS 100 V, HV rail clamp"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "397fd66c-3509-4c21-8a8d-0fee4fde18fe")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "SMF100A"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "bb4ece94-e0ea-4c4c-ab99-b98106d6c198")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -10032,7 +10323,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "54620e25-4db0-4647-80e4-8ae70a0161ed")
@@ -10240,6 +10531,7 @@
 		(path "/35aa7e56-7162-5b26-ab0b-e040fa76cc6d")
 		(sheetname "/")
 		(sheetfile "NeonPine.kicad_sch")
+		(attr exclude_from_bom)
 		(units
 			(unit
 				(name "A")
@@ -10368,7 +10660,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "74e7fcfa-67e2-49bf-b975-6b2c7c19fe51")
@@ -10532,7 +10824,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "9ef9d4d0-b0ae-493e-9994-0257c36a8428")
@@ -10696,7 +10988,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1kΩ"
 			(at 0 -1.17 0)
 			(layer "B.Fab")
 			(uuid "09356021-57a3-4805-a929-772a059e4250")
@@ -10860,7 +11152,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "f8c2c65b-7187-4aad-832c-b982a0e78ade")
@@ -10884,7 +11176,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -11024,7 +11316,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "47"
+		(property "Value" "47Ω"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "d19cc2b8-b05e-4117-9eae-f171ba5e4316")
@@ -11188,7 +11480,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "f5ed81fb-391b-4f6b-ae17-46fa15935ced")
@@ -11352,7 +11644,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1M"
+		(property "Value" "1MΩ"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "2bae2445-0503-4701-aab6-bc3783a6982d")
@@ -11540,11 +11832,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "cd8310f2-3356-49cc-8d86-f922210cbe82")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "16d1698d-48ea-4432-8198-b80e62b170ad")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "8095d534-60cd-4f5a-bcc8-bf511ef1b046")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11887,7 +12203,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "c8b5d978-0f24-48ee-ba6f-b550a771148a")
@@ -11911,7 +12227,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -12051,7 +12367,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "100nF"
 			(at 0 -1.16 0)
 			(layer "B.Fab")
 			(uuid "de8f2596-bd29-4997-867a-74622201b8a5")
@@ -12075,7 +12391,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, 16 V or more"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -12215,7 +12531,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "SMF5.0A (TVS)"
+		(property "Value" "SMF5.0A"
 			(at 0 -2.1 0)
 			(layer "B.Fab")
 			(uuid "e4c47702-43e7-464f-ba43-0f28813e4db2")
@@ -12241,12 +12557,26 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "TVS 5 V, USB VBUS"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "96f7ee8b-87d5-44aa-b758-0cf0fb2a1587")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "SMF5.0A"
+			(at 0 0 0)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "ed973506-528d-4ae4-8b04-848e164126c8")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12510,7 +12840,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "85dbf0a5-400d-4c29-947d-c9bf9051e716")
@@ -12534,7 +12864,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -12674,7 +13004,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100 (snubber)"
+		(property "Value" "100Ω"
 			(at 0 -1.65 0)
 			(layer "B.Fab")
 			(uuid "8d6d8b24-2186-432d-8f3f-c84be03f2ca5")
@@ -12698,7 +13028,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Snubber, not fitted by default"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -12838,7 +13168,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "669d8c9c-a14f-4f1a-9973-1238e07f4b77")
@@ -12862,7 +13192,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -13026,11 +13356,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "b92c5cfc-8731-4edd-85fd-59dcc27e6be7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "0b2e3882-eae5-4fb1-b3d0-ca154d94b341")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "7be826df-7271-4813-82b4-93ac1c8e536d")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13373,7 +13727,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "dd2d292c-13b6-4882-ba87-18501edf24f4")
@@ -13537,7 +13891,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "c535958f-f1ba-4408-930e-9d538710df11")
@@ -13561,7 +13915,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -13701,7 +14055,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "1k"
+		(property "Value" "1kΩ"
 			(at 0 -1.17 0)
 			(layer "B.Fab")
 			(uuid "81750def-7d94-44b9-aec9-40b609faa949")
@@ -13865,7 +14219,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100k"
+		(property "Value" "100kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "51765d82-bb6d-42cf-b00d-444d55ba81ca")
@@ -14029,7 +14383,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "d28e7577-4a7d-4989-bb03-a4152dfeddab")
@@ -14193,7 +14547,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "9a2520b5-60c3-4e1c-b717-e03670550e8b")
@@ -14217,7 +14571,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -14357,7 +14711,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "10n"
+		(property "Value" "10nF"
 			(at 0 -1.16 90)
 			(layer "B.Fab")
 			(uuid "2ac7d423-d2d1-4722-b607-a858555c9a98")
@@ -14381,7 +14735,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, ADC filter"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -14521,7 +14875,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "8b5dc795-85ba-46d0-af08-6ddd686eaa14")
@@ -14545,7 +14899,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -14685,7 +15039,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "6fd9c994-131c-451a-86eb-2281b3cbc3c2")
@@ -14849,7 +15203,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "d0a25c82-c3db-4f9b-a0d5-072c716adbc9")
@@ -14873,7 +15227,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -15042,6 +15396,18 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "86d0837b-560b-4c79-86f6-53445fc5d14d")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "74HC595BQ,115"
+			(at 0 0 90)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1c3625ad-58e3-4567-9325-05085d41fa1b")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15608,7 +15974,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "77d62c7a-9bca-4cd4-9945-18f39e83fe3c")
@@ -15772,7 +16138,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "200V 1A fast SOD-123F (verify P/N)"
+		(property "Value" "200V 1A fast recovery"
 			(at 0 -2.1 90)
 			(layer "B.Fab")
 			(uuid "9e6bc800-6424-482d-a133-8a12dc26e541")
@@ -15798,7 +16164,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Boost rectifier, SOD-123F; part number not chosen yet"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -16067,7 +16433,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1kΩ"
 			(at 0 -1.17 0)
 			(layer "B.Fab")
 			(uuid "26030856-17ef-470f-ae57-163384d0db35")
@@ -16232,7 +16598,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "USB-C 6P (USB4125-GF-A)"
+		(property "Value" "USB4125-GF-A"
 			(at 0 -4.725 90)
 			(unlocked yes)
 			(layer "B.Fab")
@@ -16259,12 +16625,26 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "USB-C power-only receptacle, 6 pin"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "e432cc0b-2076-4905-b91b-95068892b767")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "USB4125-GF-A"
+			(at 0 0 90)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "50a637d2-8837-461f-ba14-892989b4f9cb")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16505,7 +16885,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "100n"
+		(property "Value" "100nF"
 			(at 0 -1.16 0)
 			(layer "B.Fab")
 			(uuid "2ced1479-403c-46dc-868d-a0b7e936736a")
@@ -16529,7 +16909,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "MLCC X7R, 16 V or more"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
@@ -16669,7 +17049,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "9a0fdd3c-c498-466b-9d3a-322b62395fa2")
@@ -16693,7 +17073,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -16833,7 +17213,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "b83af410-1a26-47b2-a3be-456506df5b3e")
@@ -16857,7 +17237,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -16997,7 +17377,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "81bfc3ee-fa71-4a7c-af1b-0124e7ea5bba")
@@ -17161,7 +17541,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "330u (SWPA6028S331MT, Isat>=0.4A)"
+		(property "Value" "330uH"
 			(at 0 -4.45 0)
 			(layer "B.Fab")
 			(uuid "c899b4f4-dfc3-40fd-bae8-7854210b7ad4")
@@ -17187,12 +17567,26 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Shielded power inductor 6x6 mm, Isat >= 0.4 A"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "c78692e2-2688-4a9c-8d8c-0d151880d6c1")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "SWPA6028S331MT"
+			(at 0 0 180)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "163a646b-f7e3-4aad-ad15-a39b36175090")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17456,7 +17850,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "a2dd7f5c-3e9b-4a63-ad2d-19567eb0e493")
@@ -17480,7 +17874,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -17644,11 +18038,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "aa4420b3-eb07-4666-b90a-eccabbc26ec4")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "2b68e066-68bf-4e86-8a3a-9514ceb09a86")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "235cf17b-9a9e-4171-9419-c1e5e28ed4e2")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -17991,7 +18409,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "cba1e56c-3a08-438f-8a3f-e310a131ff05")
@@ -18155,7 +18573,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "6c4dc164-8af9-428d-885f-56b3973a7930")
@@ -18179,7 +18597,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -18319,7 +18737,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "150k 200V"
+		(property "Value" "150kΩ 200V"
 			(at 0 -1.43 90)
 			(layer "B.Fab")
 			(uuid "9e540199-6d47-4515-9af4-6d4c3b90aafc")
@@ -18343,7 +18761,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thick film, >= 200 V working voltage (e.g. RCV0603)"
 			(at 0 0 90)
 			(layer "B.Fab")
 			(hide yes)
@@ -18515,6 +18933,20 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "12773d1d-6258-4236-a55a-d4ed656de896")
+			(effects
+				(font
+					(size 1.27 1.27)
+					(thickness 0.15)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "DMN15H310SE"
+			(at 0 0 270)
+			(unlocked yes)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "a338ddfd-17ba-42f0-8034-755932184bf0")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -18759,7 +19191,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "8360aba3-911e-4bdc-b738-6364f0c75f73")
@@ -18947,11 +19379,35 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Dual NPN 160 V, JSCJ (pin-compatible with Diodes MMDT5551)"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "37b3c2f7-c11e-44c5-9834-00f47c136aca")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MMDT5551(RANGE:100-300)"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "52ef6a66-090f-4e3f-bbfa-ae3a871e819e")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "LCSC" "C148105"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "1afd23ff-61b7-4199-b504-6721f4ba26f9")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19294,7 +19750,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "22k"
+		(property "Value" "22kΩ"
 			(at 0 -1.17 90)
 			(layer "B.Fab")
 			(uuid "dceaaff2-85c5-4128-bcaa-d4fd8ec24a81")
@@ -19458,7 +19914,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "PTC 0.5A (MF-NSMF050-2)"
+		(property "Value" "MF-NSMF050-2"
 			(at 0 -1.83 0)
 			(layer "B.Fab")
 			(uuid "6d42dafc-e211-4137-8bab-c050f33e6c95")
@@ -19482,11 +19938,23 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "PTC resettable fuse 0.5 A hold"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "91ce2454-0ba9-44f4-a5a6-e561c59783b7")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "MF-NSMF050-2"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "a698f1bf-986e-426e-a8ca-f00ab1cf1253")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -19651,6 +20119,18 @@
 			(layer "B.Fab")
 			(hide yes)
 			(uuid "4ad1a519-aad4-4263-b353-0c65be43ee22")
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify mirror)
+			)
+		)
+		(property "MPN" "74HC595BQ,115"
+			(at 0 0 0)
+			(layer "B.Fab")
+			(hide yes)
+			(uuid "c27ae584-0119-479c-8581-c5eda831d085")
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -20217,7 +20697,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "33"
+		(property "Value" "33Ω"
 			(at 0 -1.17 0)
 			(layer "B.Fab")
 			(uuid "d44ac9d4-1b88-4561-919a-8aec7a8b5e5a")
@@ -20241,7 +20721,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "SPI clock series resistor"
 			(at 0 0 0)
 			(layer "B.Fab")
 			(hide yes)

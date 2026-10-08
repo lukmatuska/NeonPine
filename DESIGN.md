@@ -13,7 +13,10 @@
 > **Routing status (2 layers, 2026‑10‑08): fully routed** (Freerouting + scripted SOT‑363 fan‑outs + hand routing, U2 QE–QG
 > swapped by hand). 0 unconnected, 0 errors with the HVBUS/PWR pattern fixes; the hand edits (J2, U3, Q15/R55 around lamp 5)
 > live only in the board file – `tools/pcb.py` would not reproduce them.
-> The renders under `docs/img`, the `fab/` outputs, the BOM CSV and the compliance documents still describe rev B.
+> The renders under `docs/img`, the Gerbers/pick‑and‑place/STEP in `fab/` and the compliance documents still describe rev B.
+> `fab/NeonPine-bom.csv` is current and in JLCPCB/LCSC upload format (Comment, Designator, Footprint, Quantity, MPN, LCSC Part #, Description; DNP and
+> pad‑only parts J2/TP2/TP3 excluded). Regenerate it with
+> `kicad-cli sch export bom -o fab/NeonPine-bom.csv --fields 'Value,Reference,${FOOTPRINT_NAME},${QUANTITY},MPN,LCSC,Description' --labels 'Comment,Designator,Footprint,Quantity,MPN,LCSC Part #,Description' --group-by 'Value,${FOOTPRINT_NAME},MPN' --exclude-dnp --ref-range-delimiter "" NeonPine.kicad_sch`.
 A CH32V003 MCU runs a 75–105 V boost converter and drives each lamp separately.
 Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in stand base. Unit manufacturing cost ≈ €19 / €9 / €6 at 10 / 100 / 500 pcs
 ([manufacturing §7](docs/manufacturing.md)).
@@ -119,7 +122,7 @@ PD2 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │           
 | alternate ≥ 100 Hz | | both electrodes glow (AC look); also evens out cathode wear |
 | on | on | dark, but both pull‑ups draw current – firmware never does this |
 
-* **Parts:** Q1n = MMDT5551 (Diodes Inc., V_CEO 160 V, SOT‑363, pin‑out E1 B1 C2 E2 B2 C1); 160 V covers the 123 V D2 clamp.
+* **Parts:** Q1n = MMDT5551 from JSCJ (`MMDT5551(RANGE:100-300)`, LCSC C148105; V_CEO 160 V, h_FE 100–300 at 10 mA, SOT‑363, pin‑out E1 B1 C2 E2 B2 C1, the same as the Diodes Inc. MMDT5551‑7‑F, which is the drop‑in alternative); 160 V covers the 123 V D2 clamp.
   The pull‑ups dissipate up to 105² / 150 k = 74 mW (the lead that is pulled low), so they must be **0603 high‑voltage
   thick film rated ≥ 200 V / 0.1 W** (e.g. RCV0603); a standard 0603 is only rated 75 V. 0402 is not possible here (≤ 100 V even in HV series).
   No 160 V+ dual NPN exists in a DFN package (Nexperia's DFN2020 doubles stop at 120 V, PBSS4112PAN), and there is no quad.
@@ -199,7 +202,7 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 |---|---|---|---|
 | U1 | CH32V003F4P6 | 1 | 0.13 |
 | LA1–LA10 | Brightmaster NEON‑3 (TME) | 10 | *TME price* |
-| Q11–Q20 | MMDT5551 (dual NPN, SOT‑363) | 10 | ≈ 0.20 *(check)* |
+| Q11–Q20 | MMDT5551, JSCJ (dual NPN, SOT‑363, LCSC C148105) | 10 | ≈ 0.04 / 0.03 at 10 / 100+ |
 | U2, U3 | 74HC595BQ (DHVQFN‑16) | 2 | ≈ 0.10 *(check)* |
 | Q1 | DMN15H310SE | 1 | 0.15 |
 | Q2 | Vishay TEPT4400 (light sensor) | 1 | 0.10 |
