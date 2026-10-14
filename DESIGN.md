@@ -194,7 +194,11 @@ PD4 ─ R14 68Ω ─┴─ D− (J1 A7/B7) ────────────�
 * **D− pull‑up** R15 1k5 to VBUS → low‑speed device, **always on the bus**; D5 clamps the idle level. While plugged in it draws
   ≈ 1 mA through D5. To re‑enumerate (bootloader → application), drive D− low for a few ms.
 * **rv003usb `usb_config.h`:** `USB_PORT D`, `USB_PIN_DP 2`, `USB_PIN_DM 4`, no `USB_PIN_DPU`. Needs HSI × 2 = 48 MHz.
-* **Layout:** J1 = GCT USB4105‑GF‑A (LCSC C3020560), PCB‑edge line at x 118 as before; R13/R14 under U1's pin‑1 corner,
+* **Layout:** J1 = GCT USB4105‑GF‑A (LCSC C3020560). Its shell front sits 1.64 mm past the board edge (x 119.6, 1.2 mm further
+  out than GCT's PCB‑edge line), and the right pot‑rim lip above it is cut back to x 119.4 (`outline()`; the rear cover keeps the
+  earlier, smaller notch, which only cuts the lip below y 97 and has no effect on the cable): the
+  plug body of a cable (≤ 12.35 mm wide, reaching up to 1.6 mm forward of the back face) must not hit the board in front of the
+  mouth – now clear for plug bodies up to 12.5 mm wide. R13/R14 under U1's pin‑1 corner,
   D4/D5, R15 and the CC resistors R3/R4 in a row below J1. Its shell pads are poured solid. The library land pattern puts
   J1's A1/B12/A12/B1 pads 0.19 mm from its own NPTH pegs – a J1‑only rule in `NeonPine.kicad_dru` allows that.
 

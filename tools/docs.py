@@ -3,7 +3,7 @@
   * docs/NeonPine-schematic.pdf                      kicad-cli sch export pdf
   * docs/img/{front,back,iso-front,iso-back}.png      kicad-cli pcb render (cover-and-stand.png only with --cover)
   * docs/mcu-netlist.md                               tools/mcu_netlist.py
-  * fab/ (Gerbers + drill + zip, pick & place, BOM, STEP)   the commands of docs/manufacturing.md §1
+  * fab/ (Gerbers + drill + zip, pick & place, BOM, STEP; cover + stand Gerbers)   the commands of docs/manufacturing.md §1
   * DESIGN.pdf, docs/{README,manufacturing,user-manual,mcu-netlist}.pdf   Markdown -> HTML -> headless Chromium
 Usage: python3 tools/docs.py [--no-render] [--no-fab] [--cover]"""
 import os, re, sys, subprocess, shutil, zipfile, tempfile, html
@@ -50,6 +50,13 @@ def fab():
     run('kicad-cli', 'sch', 'export', 'bom', '-o', 'fab/NeonPine-bom.csv', '--fields',
         'Reference,Value,Footprint,${QUANTITY},${DNP}', '--group-by', 'Value,Footprint', SCH)
     run('kicad-cli', 'pcb', 'export', 'step', '-o', 'fab/NeonPine.step', '--subst-models', '--force', PCB)
+    # rear cover + stand base (no copper): built by tools/cover.py from the same outline()
+    c, cover = 'fab/cover/', os.path.join(PRJ, 'NeonPine-cover.kicad_pcb')
+    for f in os.listdir(os.path.join(PRJ, c)): os.remove(os.path.join(PRJ, c, f))
+    run('kicad-cli', 'pcb', 'export', 'gerbers', '-o', c, '--layers', 'F.Mask,B.Mask,F.Silkscreen,Edge.Cuts', cover)
+    run('kicad-cli', 'pcb', 'export', 'drill', '-o', c, '--format', 'excellon', cover)
+    with zipfile.ZipFile(os.path.join(PRJ, 'fab/NeonPine-cover-stand-gerbers.zip'), 'w', zipfile.ZIP_DEFLATED) as z:
+        for f in sorted(os.listdir(os.path.join(PRJ, c))): z.write(os.path.join(PRJ, c, f), f)
 
 CSS = '''
 @page { size: A4; margin: 14mm 14mm 16mm 14mm; }

@@ -59,12 +59,22 @@ def outline():
               [(0, 12), (14, 30), (-14, 30)],
               [(0, 22), (20, 44), (-20, 44)],
               [(0, 31), (30, 56), (-30, 56)],
-              [(-21, 55.5), (21, 55.5), (21, 59.5), (18, 59.5), (18, 68.5), (16.5, 70), (-16.5, 70), (-18, 68.5), (-18, 59.5), (-21, 59.5)]]
+              # pot; its right rim lip is cut back to x 19.4 above USB-C J1, so a cable plug body (≤ 12.35 mm wide, up to
+              # 1.6 mm forward of the back face) cannot hit the board in front of the connector mouth
+              [(-21, 55.5), (19.4, 55.5), (19.4, 59.5), (18, 59.5), (18, 68.5), (16.5, 70), (-16.5, 70),
+               (-18, 68.5), (-18, 59.5), (-21, 59.5)]]
     shapes = [shapes[0]] + [[sc(x, y) for x, y in sh] for sh in shapes[1:]]
     u = poly(shapes[0])
     for s in shapes[1:]: u.BooleanAdd(poly(s))
     u.Simplify()
     u = u.Fillet(MM(1.5), MM(0.01))   # rounded corners all round
+    # the inside corner where the cut-back pot lip meets tier 3 at (19.4, 56) is rounded with r 0.85 instead of 1.5:
+    # clear the corner square (it holds only the 1.5 mm fillet) and put back a 0.85 mm one
+    cx, cy = sc(19.4, 56.0)
+    u.BooleanSubtract(poly([(cx, cy), (cx + 1.6, cy), (cx + 1.6, cy + 1.6), (cx, cy + 1.6)]))
+    r = 0.85
+    u.BooleanAdd(poly([(cx, cy)] + [(cx + r + r * math.cos(math.radians(a)), cy + r + r * math.sin(math.radians(a)))
+                                    for a in range(270, 179, -5)]))
     # stand tabs on the pot bottom edge (plug into the base plate made by tools/cover.py)
     for tx, tw in TABS:
         u.BooleanAdd(poly([(tx - tw / 2, 70 * SC - 0.5), (tx + tw / 2, 70 * SC - 0.5), (tx + tw / 2, 70 * SC + TAB_H), (tx - tw / 2, 70 * SC + TAB_H)]))
