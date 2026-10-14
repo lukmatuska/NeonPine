@@ -7,8 +7,7 @@
   "16": "LAMP6",
   "10": "LAMP7",
   "8": "LAMP8",
-  "15": "LAMP9",
-  "17": "LAMP10"
+  "15": "LAMP9"
  },
  "sr": [
   "LAMPA8",
@@ -22,8 +21,8 @@
   null,
   null,
   null,
-  null,
   "LAMPA10",
+  "LAMP10",
   "LAMPA9",
   null,
   "LAMPA6"

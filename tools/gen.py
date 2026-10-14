@@ -8,12 +8,15 @@ FPDIR='/usr/share/kicad/footprints/'
 PRJ=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 R06='Resistor_SMD:R_0603_1608Metric'; R12='Resistor_SMD:R_1206_3216Metric'
 C06='Capacitor_SMD:C_0603_1608Metric'
+ZD='Diode_SMD:D_SOD-882'
 R04='Resistor_SMD:R_0402_1005Metric'; C04='Capacitor_SMD:C_0402_1005Metric'   # low-voltage passives (0402: 50 V max)
 parts=[]  # (ref,lib,name,x,y,value,fp,{pin:net},dnp,unit)
 def P(ref,lib,name,x,y,val,fp,nets,dnp=False,unit=1): parts.append((ref,lib,name,x,y,val,fp,nets,dnp,unit))
 # --- power in
-P('J1','Connector','USB_C_Receptacle_PowerOnly_6P',35.56,55.88,'USB-C 6P (USB4125-GF-A)','Connector_USB:USB_C_Receptacle_GCT_USB4125-xx-x_6P_TopMnt_Horizontal',
-  {'A9':'VBUS','B9':'VBUS','A5':'CC1','B5':'CC2','A12':'GND','B12':'GND','SH':'GND'})
+# USB 2.0 receptacle (D+/D- wired for rv003usb low-speed USB); same GCT family / shell pattern as the old power-only USB4125
+P('J1','Connector','USB_C_Receptacle_USB2.0_16P',35.56,50.8,'USB-C 16P (USB4105-GF-A)','Connector_USB:USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal',
+  {'A4':'VBUS','A9':'VBUS','B4':'VBUS','B9':'VBUS','A5':'CC1','B5':'CC2','A6':'USB_DP','B6':'USB_DP','A7':'USB_DM','B7':'USB_DM',
+   'A1':'GND','A12':'GND','B1':'GND','B12':'GND','SH':'GND'})
 P('R3','Device','R',60.96,68.58,'5k1',R04,{'1':'CC1','2':'GND'})
 P('R4','Device','R',68.58,68.58,'5k1',R04,{'1':'CC2','2':'GND'})
 P('F1','Device','Polyfuse',76.2,45.72,'PTC 0.5A (MF-NSMF050-2)','Fuse:Fuse_1206_3216Metric',{'1':'VBUS_F','2':'VBUS'})
@@ -45,13 +48,14 @@ _j=json.load(open(_lp)) if os.path.exists(_lp) else {}
 SR_SLOTS=_j.get('sr')                       # AC branch format: {"mcu": {pin: LAMPn}, "sr": [16 shift-register slots]}
 LAMP_PINS=_j['mcu'] if 'mcu' in _j else _j if _j else {'10':'LAMP1','11':'LAMP2','12':'LAMP3','13':'LAMP4','14':'LAMP5',
   '15':'LAMP6','16':'LAMP7','17':'LAMP8','8':'LAMP9','1':'LAMP10'}
-# --- MCU
-LAMP_PINS={k:v for k,v in LAMP_PINS.items() if k not in ('1','3','5')}   # PD4/PD6/PA1 drive the shift registers
+# --- MCU. USB (rv003usb): D+ = PD2, D- = PD4 (USB_PIN_DP/DM must be GPIO 0-4 of one port). That moves the boost gate from
+# PD2 (TIM1_CH1) to PD6 (TIM2_CH3, TIM2 full remap), the light sensor to PA1 (A1), SR_LATCH to PD5, SR_CLK to PC7 and
+# SR_DATA to PD7 - NRST must be configured as GPIO (minichlink -D). LAMP10's cathode switch moved to U3 (frees PC7).
+LAMP_PINS={k:v for k,v in LAMP_PINS.items() if k in ('8','10','11','12','13','14','15','16')}
 P('U1','MCU_WCH_RiscV','CH32V003FxPx',60.96,121.92,'CH32V003F4P6','Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm',
-  {**LAMP_PINS, '18':'SWIO','19':'GATE_DRV','20':'VFB','2':'LDR','4':'NRST',
-   '5':'SR_CLK','6':'TOUCH2','3':'SR_DATA','1':'SR_LATCH','9':'+5V','7':'GND'})
+  {**LAMP_PINS, '18':'SWIO','19':'USB_DP_MCU','20':'VFB','1':'USB_DM_MCU','2':'SR_LATCH','3':'GATE_DRV','4':'SR_DATA',
+   '5':'LDR','6':'TOUCH2','17':'SR_CLK','9':'+5V','7':'GND'})
 P('C6','Device','C',101.6,106.68,'100n',C04,{'1':'+5V','2':'GND'})
-P('C7','Device','C',101.6,129.54,'100n',C04,{'1':'NRST','2':'GND'})
 P('J2','Connector_Generic','Conn_01x03',101.6,149.86,'SWD pogo pads','NeonPine:Pogo_1x03_P2.54mm',
   {'1':'+5V','2':'SWIO','3':'GND'})
 # --- inputs
@@ -102,6 +106,8 @@ SR_OUT=['15','1','2','3','4','5','6','7']   # QA..QH
 if SR_SLOTS: assert sorted(x for x in SR_SLOTS if x)==sorted(SR_LAMPS), 'lamp_pins.json does not match'
 srn=(lambda k:{SR_OUT[i]:SR_SLOTS[k*8+i] for i in range(8) if SR_SLOTS[k*8+i]}) if SR_SLOTS else \
     (lambda k:{SR_OUT[i]:SR_LAMPS[k*8+i] for i in range(8) if k*8+i<len(SR_LAMPS)})
+PROPS['J1']=(25.4,29.21,25.4,31.75,'left',0)
+PROPS['D4']=(181.61,163.83,181.61,166.37,'left',0); PROPS['D5']=(212.09,163.83,212.09,166.37,'left',0)
 PROPS['U2']=(260.35,144.78,260.35,147.32,'left',0); PROPS['U3']=(313.69,144.78,313.69,147.32,'left',0)
 P('U2','74xx','74HC595',256.54,124.46,'74HC595BQ','NeonPine:DHVQFN-16-1EP_2.5x3.5mm_P0.5mm_EP1x2mm_EPGND',
   {**srn(0),'14':'SR_DATA','11':'SR_CLK','12':'SR_LATCH','10':'+5V','13':'GND','9':'SR_CHAIN','16':'+5V','8':'GND'})
@@ -109,13 +115,24 @@ P('U3','74xx','74HC595',309.88,124.46,'74HC595BQ','NeonPine:DHVQFN-16-1EP_2.5x3.
   {**srn(1),'14':'SR_CHAIN','11':'SR_CLK','12':'SR_LATCH','10':'+5V','13':'GND','16':'+5V','8':'GND'})
 P('C9','Device','C',233.68,149.86,'100n',C04,{'1':'+5V','2':'GND'})
 P('C10','Device','C',287.02,149.86,'100n',C04,{'1':'+5V','2':'GND'})
+# --- USB low-speed (rv003usb). The MCU stays at 5 V (full gate drive for Q1, no level shifter, no LDO): its 2.06 V V_IH at
+# VDD = 5 V reads the 3.3 V bus directly, and on transmit the 68R series resistors + 3.6 V zeners clamp its 5 V push-pull
+# drive to the USB level. D- pull-up (low-speed device) 1k5 to VBUS, also clamped by D5; device is always on-bus.
+P('R13','Device','R',147.32,160.02,'68',R04,{'1':'USB_DP_MCU','2':'USB_DP'})
+P('R14','Device','R',160.02,160.02,'68',R04,{'1':'USB_DM_MCU','2':'USB_DM'})
+P('D4','Device','D_Zener',185.42,160.02,'BZX884-C3V6',ZD,{'1':'USB_DP','2':'GND'})
+P('D5','Device','D_Zener',215.9,160.02,'BZX884-C3V6',ZD,{'1':'USB_DM','2':'GND'})
+P('R15','Device','R',134.62,160.02,'1k5',R04,{'1':'VBUS','2':'USB_DM'})
 
-notes=[(25.4,25.4,'POWER IN – USB-C 5V, TVS D3, PTC F1, ferrite FB1'),(119.38,25.4,'HV BOOST 75–100 V (MCU-controlled, TIM1 30 kHz)'),
- (25.4,96.52,'MCU CH32V003F4P6 (runs at 5 V)'),(132.08,96.52,'INPUTS – LDR, TKEY touch pads, spare pad'),
+notes=[(25.4,25.4,'POWER IN – USB-C 5V, TVS D3, PTC F1, ferrite FB1'),(119.38,25.4,'HV BOOST 75–100 V (MCU-controlled, TIM2_CH3 on PD6, 30 kHz)'),
+ (25.4,96.52,'MCU CH32V003F4P6 (runs at 5 V)'),(25.4,100.33,'PD7 = SR_DATA: program NRST as GPIO (minichlink -D)'),(132.08,96.52,'INPUTS – LDR, TKEY touch pads, spare pad'),
  (25.4,177.8,'NEON LAMPS – Brightmaster NEON-3 (strike ≤90 VDC, ~60 V settled). Each lead: 150k (200 V type) to HV+ and one half of an MMDT5551 (160 V) to GND. Pull one lead low: that electrode glows.'),
  (25.4,181.61,'I_lamp = (V_HV - 60 V)/150k ≈ 0.1–0.3 mA, plus V_HV/150k ≈ 0.7 mA lost in the pulled-low lead\'s own pull-up. Both off: dark, no current.'),
- (228.6,96.52,'LAMP DRIVE – 2 × 74HC595: LAMPA1–10 (anode-side switches) + the one cathode switch the MCU has no pin for'),
- (228.6,100.33,'SR_DATA = PD6, SR_CLK = PA1, SR_LATCH = PD4. /OE tied low: outputs are random until the first latch, but the boost is off then (R2).'),
+ (180.34,137.16,'USB low-speed (rv003usb): D+ = PD2, D- = PD4.'),
+ (180.34,140.97,'The MCU stays at 5 V: 68R + 3.6 V zeners clamp'),
+ (180.34,144.78,'its drive to USB levels. 1k5 D- pull-up to VBUS.'),
+ (228.6,96.52,'LAMP DRIVE – 2 × 74HC595: LAMPA1–10 (anode-side switches) + the cathode switches of LA1 and LA10'),
+ (228.6,100.33,'SR_DATA = PD7, SR_CLK = PC7, SR_LATCH = PD5. /OE tied low: outputs are random until the first latch, but the boost is off then (R2).'),
  (119.38,81.28,'Q1 DMN15H310SE: 150 V, 0.33 Ω @ Vgs=5 V. R2 keeps boost off during reset.'),
  (119.38,85.09,'D2 = hard OVP clamp (Vbr 111–123 V). R12/C8 snubber: optional (DNP).')]
 
@@ -181,7 +198,7 @@ for net,x,y,ang in ml:
 for net,x,y in mp:
     npw+=1; place(f'#PWR{npw:03d}','power',net,x,y,net,'',{},False,power=True)
 ncs=[]
-for ref in ('U2','U3'):
+for ref in ('U2','U3','J1'):
     p=[q for q in parts if q[0]==ref][0]
     for no,nm,px,py,a in pins(getsym(p[1],p[2])):
         if no not in p[7]: ncs.append(['no_connect',['at',f'{p[3]+px:g}',f'{round(p[4]-py,2):g}'],['uuid',f'"{U()}"']])

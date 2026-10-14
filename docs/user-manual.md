@@ -1,6 +1,6 @@
 # NeonPine – user manual (English, DRAFT)
 
-> Draft for rev B. Items in `[brackets]` are placeholders. Translate into every language of the country of sale (GPSR Art. 9(7)).
+> Draft (H‑bridge + USB hardware; firmware not final). Items in `[brackets]` are placeholders. Translate into every language of the country of sale (GPSR Art. 9(7)).
 
 ![NeonPine](img/iso-front.png)
 
@@ -31,6 +31,11 @@
 2. Connect a USB‑C cable to the socket on the right side of the "pot", and connect the other end to a 5 V USB power adapter.
 3. The tree lights up. Neon lamps may take a few seconds to light the first time in a completely dark room. This is normal.
 
+### Connecting to a computer
+NeonPine can also be plugged into a computer's USB port. It then appears as a USB device (no driver needed)
+`[describe the functions once the firmware is final: settings app / animations / firmware updates]`. The tree keeps working
+normally while it is connected.
+
 ## Controls
 | Action | Result |
 |---|---|
@@ -47,7 +52,7 @@ Animations: Candle · Breathe · Twinkle · Garland · Snowfall · Heartbeat · 
 | | |
 |---|---|
 | Model | NeonPine `[NP‑1]` |
-| Input | 5 V ⎓ `[0.15]` A via USB‑C |
+| Input | 5 V ⎓ `[0.15]` A via USB‑C (USB 2.0 low‑speed data) |
 | Light source | 10 neon glow lamps, orange (not replaceable) |
 | Size | 55 × 69 mm (tree), base 50 × 26 mm, depth about 15 mm with the cover |
 | Use | indoor, dry locations, 0–35 °C |
@@ -58,6 +63,7 @@ Animations: Candle · Breathe · Twinkle · Garland · Snowfall · Heartbeat · 
 | Nothing lights up | Check the cable and adapter. In daylight the tree switches off automatically; cover the tree with your hand to test |
 | Some lamps light up late in the dark | Normal for neon lamps; they light within seconds |
 | Lamps flicker on a computer USB port | Use a USB power adapter that can supply at least 0.5 A |
+| The computer reports an unknown or unrecognised USB device | Unplug it and plug it in again, or use a power adapter if you do not need the computer connection `[firmware‑specific]` |
 
 ## Care
 Wipe gently with a dry, soft cloth when the tree is unplugged. Do not use liquids or solvents.
