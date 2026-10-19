@@ -14,7 +14,8 @@ The RoHS assessment follows EN IEC 63000: rate each part's risk, then collect ev
 | C1–C7 | MLCC | `[make]` | Low | declaration | open |
 | R* | thick‑film chip resistors | `[make]` | Low (glass‑frit Pb exempt 7(c)‑I) | declaration, exemptions listed | open |
 | ~~R8~~ → **Q2** | ~~GL5528 CdS LDR~~ → **Vishay TEPT4400** phototransistor | Vishay | Low | Vishay RoHS / REACH declaration (Cd‑free silicon) | **rev B: replaced** – declaration to file |
-| J1 | USB‑C GCT USB4125‑GF‑A | GCT | Medium (copper alloy Pb, exemption 6(c)) | declaration incl. exemptions → Prop 65 decision | open |
+| J1 | USB‑C GCT USB4125‑GF‑A (**USB branch: USB4105‑GF‑A**, 16‑pin) | GCT | Medium (copper alloy Pb, exemption 6(c)) | declaration incl. exemptions → Prop 65 decision | open |
+| U4, U5 | **USB branch:** XC6206P332MR LDO, 74AHCT1G125 buffer | `[make]` | Low | declaration | open |
 | F1 | MF‑NSMF050‑2 PTC 1206 | Bourns | Low | declaration | open |
 | D3 / FB1 | SMF5.0A TVS / 600 Ω ferrite 0603 | `[make]` | Low | declaration | open |
 | J2 | ~~pin header~~ → bare pogo pads (rev B) | – | – | none (no part) | **removed** |

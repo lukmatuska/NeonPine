@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Lamp -> driver pin swap. The firmware drives lamps through lookup tables, so any lamp switch may use any driver pin.
-  * cathode-side switches (base resistor R4n): the 9 MCU lamp pins (PC0-PC7 = pins 10..17, PD0 = pin 8); the lamp left
-    over goes to a shift-register output.
+  * cathode-side switches (base resistor R4n): the 6 MCU lamp pins (PC0, PC3, PC5-PC7 = pins 10, 13, 15..17, PD0 = pin 8;
+    PC1/PC2/PC4 are USB D+/D-/D- pull-up); the 4 lamps left over go to shift-register outputs.
   * anode-side switches (base resistor R5n) and that left-over cathode switch: the 16 outputs of U2/U3 (74HC595).
 Reads the placed board, solves both assignments for the shortest straight-line base-resistor -> driver pin distance
 (which also removes crossings) and writes tools/lamp_pins.json for gen.py.
@@ -11,7 +11,7 @@ import pcbnew
 from scipy.optimize import linear_sum_assignment
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PINS = ['10', '11', '12', '13', '14', '15', '16', '17', '8']
+PINS = ['10', '13', '15', '16', '17', '8']
 SR = [(u, p) for u in ('U2', 'U3') for p in ('15', '1', '2', '3', '4', '5', '6', '7')]   # QA..QH of each
 b = pcbnew.LoadBoard(os.path.join(HERE, '..', 'NeonPine.kicad_pcb'))
 pos = lambda ref, pin: (lambda p: (p.x / 1e6, p.y / 1e6))(b.FindFootprintByReference(ref).FindPadByNumber(pin).GetPosition())

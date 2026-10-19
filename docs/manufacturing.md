@@ -55,8 +55,11 @@ python3 tools/cover.py   # then: kicad-cli pcb export gerbers -o fab/cover/ --la
    or a snug press fit (slot width 1.7 mm, tab 1.6 mm).
 
 ## 4. Programming
-* Programmer: WCH‑LinkE (SWD single‑wire), pads J2: `5V – SWIO – GND` (pin 1 = 5V, square pad).
+* Programmer: WCH‑LinkE (SWD single‑wire), pads J2: `3V3 – SWIO – GND` (pin 1 = 3V3, square pad). **USB branch: set the
+  WCH‑LinkE to 3.3 V** – J2 pin 1 now feeds the 3.3 V logic rail directly (it back‑feeds U4's output; the boost stays unpowered).
 * Command: `minichlink -w firmware.bin flash -b` (ch32v003fun) or WCH‑LinkUtility.
+* **USB branch:** flash the rv003usb bootloader once over SWD (`usb_config.h`: port C, D+ 1, D− 2, DPU 4). Field updates then go over
+  USB with rv003usb's minichlink (HID, no driver needed).
 * After flashing, read back the firmware version / CRC and record it against the serial number.
 
 ## 5. End‑of‑line test (per unit, ≈ 30 s)
@@ -119,7 +122,7 @@ At 10 pcs the fixed per‑order costs dominate: assembly fees, PCB minimums and 
 | 1 | **L11 SWPA6028S331MT:** rated only **300 mA** (3.64 Ω) and **0 in stock** | Use **SWPA6045S331MT (C83453)**: 330 µH, 570 mA, 1.27 Ω, $0.05–0.09, in stock. It is 6 × 6 × 4.5 mm with the same land‑pattern family and still fits under the 5 mm cover standoffs. Update the value in `tools/gen.py` |
 | 2 | **C4 1 µF 250 V in 1210 does not exist at LCSC** (1210 only goes to 220 nF at 250 V) | Change the footprint to **1812** and use **C106152** (1 µF 250 V X7R, $0.19–0.38), or use 2 × 470 nF. Small re‑place and re‑route |
 | 3 | **Q1 DMN15H310SE: 1 in stock at JLC**, $0.37–0.66 | Drop‑in SOT‑223 alternative **CJT04N15 (C81507)**: 150 V, 160 mΩ at 10 V, V_th 2.5 V, $0.10–0.20, 11 k in stock. **Check R_DS(on) at V_GS = 5 V** on the datasheet. Saves ≈ €0.25/unit |
-| 4 | **J1 USB4125‑GF‑A** is the most expensive part ($0.58–0.84) | Cost‑down option: **HC‑TYPE‑C‑6P‑01A (C2894893)**, 6‑pin power‑only, $0.03–0.05, in stock. Needs a footprint change. Saves ≈ €0.5–0.7/unit |
+| 4 | **J1 USB4125‑GF‑A** is the most expensive part ($0.58–0.84) | Cost‑down option: **HC‑TYPE‑C‑6P‑01A (C2894893)**, 6‑pin power‑only, $0.03–0.05, in stock. Needs a footprint change. Saves ≈ €0.5–0.7/unit. **USB branch:** J1 is the 16‑pin USB4105‑GF‑A (D+/D− needed), so a cost‑down part must be a 16‑pin USB 2.0 receptacle (e.g. HRO TYPE‑C‑31‑M‑12 or HC‑TYPE‑C‑16P‑01A, both have KiCad footprints) – *price not checked* |
 | 5 | Q2 TEPT4400 costs $0.31–0.42 (THT, hand‑soldered) | Acceptable – it replaces the CdS LDR (RoHS). A cheaper SMD ambient‑light sensor would have to go on the front, which means a second SMT side |
 | 6 | 12 extended parts × $3 = $36 per order | Irrelevant at 500 pcs; at 10 pcs it is 30 % of the assembly cost. Using JLC "basic" alternatives where possible (C3 22 µF) saves $3 each |
 
@@ -135,7 +138,8 @@ At 10 pcs the fixed per‑order costs dominate: assembly fees, PCB minimums and 
 | D2 | 1 | C283870 | SMAJ100A | extended | 0.035 | 0.035 | 0.028 |
 | D3 | 1 | C284108 | SMF5.0A | extended | 0.019 | 0.019 | 0.017 |
 | F1 | 1 | C75464 | MF‑NSMF050‑2 | extended | 0.039 | 0.039 | 0.030 |
-| J1 | 1 | C3151650 | USB4125‑GF‑A (alt. C2894893) | extended | 0.839 | 0.642 | 0.584 |
+| J1 | 1 | C3151650 | USB4125‑GF‑A (alt. C2894893) – **USB branch: USB4105‑GF‑A, LCSC # and price not checked** | extended | 0.839 | 0.642 | 0.584 |
+| U4, U5, C11, C12, R13 | 5 | – | **USB branch:** XC6206P332MR, 74AHCT1G125 (SC‑70‑5), 1 µF / 100 nF 0402, 1k5 0402 – *LCSC # and prices not checked* | – | – | – | – |
 | C4 | 1 | C106152 | 1 µF 250 V X7R **1812** (see 7.3 #2) | extended | 0.302 | 0.225 | 0.206 |
 | C3 | 1 | C29277 | 22 µF 10 V X5R 0805 | extended | 0.082 | 0.059 | 0.048 |
 | C1 | 1 | C19702 | 10 µF 10 V 0603 | basic | 0.032 | 0.032 | 0.025 |

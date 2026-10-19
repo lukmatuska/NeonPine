@@ -1,8 +1,5 @@
 {
  "mcu": {
-  "12": "LAMP2",
-  "14": "LAMP3",
-  "11": "LAMP4",
   "13": "LAMP5",
   "16": "LAMP6",
   "10": "LAMP7",
@@ -21,11 +18,11 @@
   "LAMPA3",
   null,
   null,
-  null,
-  null,
+  "LAMP4",
+  "LAMP2",
   "LAMPA10",
   "LAMPA9",
-  null,
+  "LAMP3",
   "LAMPA6"
  ]
 }
