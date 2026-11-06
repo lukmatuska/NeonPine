@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
-"""NeonPine test firmware – USB monitor / control (Linux hidraw, no extra packages).
+"""NeonPine firmware – USB monitor / control (Linux hidraw, no extra packages).
 
   nptest.py                 status once
   nptest.py watch           status every 0.2 s
   nptest.py mode auto|manual|off
+  nptest.py show candle      animation: candle breathe twinkle garland snowfall heartbeat drift sleep
+                            (touch: tap); bring-up shows: test sweep glow
+  nptest.py sleep on|off     sleep timer: dims over 20 min, then off (touch: double tap)
+  nptest.py autolight on|off light sensor: off in daylight, on at dusk, adaptive brightness, wave
+  nptest.py dim duty|rail    dim with the PWM duty (default) or the HV rail 75-105 V (simulator)
+  nptest.py wave             pretend a hand waved (next animation)
   nptest.py hv 90           HV setpoint in volts (0 = boost off, max 105)
   nptest.py lamps 1k 2a 3ac all=off ...   manual lamp states (k = pad 1, a = pad 2, ac = both)
   nptest.py pause on|off    hold / resume the auto sequence
   nptest.py level 128       brightness 0-255 for manual mode (gamma ~2)
-  nptest.py ton 15          boost gate on-time in us (1-20, default 15)
-  nptest.py freq 30         boost frequency in kHz (5 .. 1/(t_on + 4 us), default 30)
-  nptest.py touch 40        touch threshold above baseline (0 = auto)
+  nptest.py pwm 7 400       PWM frame in ms (1-20) and on-time at level 1 in us (default 7 400)
+  nptest.py budget on|off   power budget limiter (default on)
+  nptest.py style normal|retro     normal = 7 ms / 400 us, retro = 7 ms / 300 us flicker (touch: triple tap)
+  nptest.py bright 128      overall brightness 8-255 (touch: hold)
+  nptest.py ton 20          boost gate on-time in us (1-20, default 20)
+  nptest.py freq 40         boost frequency in kHz (5 .. 1/(t_on + 4 us), default 40)
+  nptest.py touch 500       touch threshold above baseline (0 = default 500)
   nptest.py clear           clear a fault
   nptest.py bootloader      reboot into the USB bootloader (minichlink does this by itself)
 """
@@ -24,11 +34,15 @@ import time
 
 VID, PID = 0x1209, 0xD003
 REPORT_STATUS, REPORT_COMMAND, REPORT_REBOOT = 0xAA, 0xAB, 0xFD
-CMD = dict(mode=1, hv=2, lamps=3, clear=4, ton=5, pause=6, touch=7, period=8, level=9)
+CMD = dict(mode=1, hv=2, lamps=3, clear=4, ton=5, pause=6, touch=7, period=8, level=9, pwm=10, budget=11, style=12, show=13, bright=14,
+           sleep=15, autolight=16, dim=17, wave=18)
 MODES = ["off", "auto", "manual"]
+SHOWS = ["candle", "breathe", "twinkle", "garland", "snowfall", "heartbeat", "drift", "sleep", "test", "sweep", "glow"]
+STYLES = ["normal", "retro"]
+GESTURES = ["-", "tap", "double tap", "hold (ramp)", "hold 3 s (off/on)", "triple tap", "wave"]
 FAULTS = ["none", "OVERVOLTAGE", "NO RISE (HV < 20 V for 1 s)"]
-LAMP = ["--", "K", "A", "AC"]
-STATUS_FMT = "<BBBBBBBBHHHHHHHHIIB3x"  # see struct np_status in neonpine_test.c
+LAMP = ["--", "L", "R", "LR"]  # lit electrodes: left (pad 1, K switch), right (pad 2, A switch)
+STATUS_FMT = "<BBBBBBBBHHHHHHHHIIBBBBBBBBBBHHBBHH"  # see struct np_status in neonpine_test.c
 
 
 def ioc(nr, size):
@@ -64,8 +78,11 @@ def command(fd, cmd, args=b""):
 
 
 def show(s):
-    (rid, ver, mode, step, fault, flags, hv_set, period_us, hv_cv, vdd, vfb, ldr, touch, tbase, ton, duty, up, lamps, level) = s
-    if step == 0:
+    (rid, ver, mode, step, fault, flags, hv_set, period_us, hv_cv, vdd, vfb, ldr, touch, tbase, ton, duty, up, lamps, level, budget, pwm_ms, pwm_min, show, style, user_level, gesture,
+     sleep_min, flags2, ambient, reflection, lux, adapt, late, late_peak) = s
+    if show < 8:
+        stp = "-"
+    elif step == 0:
         stp = "charge"
     elif step <= 20:
         stp = "LA%d %s" % ((step + 1) // 2, "K" if step % 2 else "A")
@@ -78,8 +95,16 @@ def show(s):
     print("  HV %6.1f V (set %d V, boost %s, t_on %.1f us, %.1f kHz, pulsing %4.1f %%)  VDD %.2f V  VFB adc %d" % (
         hv_cv / 100, hv_set, "on " if flags & 4 else "off", ton / 48, 1000 / period_us if period_us else 0,
         duty / 10, vdd / 1000, vfb))
-    print("  light %4d   touch %5d (base %5d)%s" % (ldr, touch, tbase, "  TOUCHED" if flags & 1 else ""))
-    print("  lamps " + lamp_txt + "   brightness %3d/255" % level)
+    print("  light %4d   touch %5d (base %5d)%s   last gesture: %s (#%d)" % (
+        ldr, touch, tbase, "  TOUCHED" if flags & 1 else "", GESTURES[gesture & 15] if (gesture & 15) < 7 else "?", gesture >> 4))
+    print("  show %s   style %s   overall brightness %d/255   sleep %s   dim %s" % (
+        SHOWS[show] if show < len(SHOWS) else show, STYLES[style] if style < 2 else style, user_level,
+        "%d min" % sleep_min if flags2 & 1 else "off", "rail" if flags2 & 8 else "duty"))
+    print("  light sensor %s: ambient %d (%d lx)%s, own light %d, adaptive %.2f" % (
+        "on" if flags2 & 4 else "off", ambient, lux, "  OFF FOR DAYLIGHT" if flags2 & 2 else "", reflection, adapt / 255))
+    print("  lamps " + lamp_txt)
+    print("  brightness %3d/255   power budget %3d/255%s   PWM %d ms, min %d us   edges late <= %d us" % (
+        level, budget, "  (LIMITING)" if budget < 255 else "", pwm_ms, pwm_min * 10, late))
 
 
 def parse_lamps(args):
@@ -117,6 +142,22 @@ def main():
             command(fd, "ton", struct.pack("<H", round(float(args[1]) * 48)))
         elif args[0] == "level":
             command(fd, "level", [int(args[1])])
+        elif args[0] == "pwm":
+            command(fd, "pwm", struct.pack("<BH", int(args[1]), int(args[2]) if len(args) > 2 else 400))
+        elif args[0] == "style":
+            command(fd, "style", [STYLES.index(args[1])])
+        elif args[0] == "show":
+            command(fd, "show", [SHOWS.index(args[1])])
+        elif args[0] == "bright":
+            command(fd, "bright", [int(args[1])])
+        elif args[0] in ("sleep", "autolight"):
+            command(fd, args[0], [args[1] in ("on", "1")])
+        elif args[0] == "dim":
+            command(fd, "dim", [["duty", "rail"].index(args[1])])
+        elif args[0] == "wave":
+            command(fd, "wave")
+        elif args[0] == "budget":
+            command(fd, "budget", [args[1] in ("on", "1")])
         elif args[0] == "freq":
             command(fd, "period", struct.pack("<H", round(48000 / float(args[1]))))
         elif args[0] == "touch":

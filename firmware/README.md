@@ -3,9 +3,10 @@
 | Dir | What |
 |---|---|
 | `bootloader/` | [rv003usb](https://github.com/cnlohr/rv003usb) USB HID bootloader (1209:B003) in the CH32V003's 1920‑byte boot area, configured for D+ = PD2, D− = PD4, no D− pull‑up pin |
-| `neonpine_test/` | Bring‑up test firmware (1209:D003): HV boost regulation, lamp/pin‑map self‑test, sensors, status over USB |
+| `neonpine_test/` | The firmware (1209:D003): HV boost, the 8 simulator animations (`anim.c`), touch UI, light sensor, sleep timer, bring‑up shows, status over USB |
 | `installer/` | Writes the bootloader + option bytes from the chip itself, for programmers that only write main flash (PicoRVD) |
-| `tools/nptest.py` | Talks to the test firmware over USB (Linux hidraw, no pip packages) |
+| `tools/nptest.py` | Talks to the firmware over USB (Linux hidraw, no pip packages) |
+| `tools/gen_anim_tables.py` | Generates `neonpine_test/anim_tables.h` (sine, e^−x, noise permutation) |
 | `tools/99-neonpine.rules` | udev rule: user access to the bootloader, the test firmware and the WCH‑LinkE |
 
 ## Setup (once per PC)
@@ -92,27 +93,81 @@ until make -C neonpine_test flash; do sleep 0.3; done
 ```
 The SWD path (`make flash-swd`, or `make first-flash` again) always works.
 
-## What the test firmware does
-After the ≈ 5 s bootloader wait:
+## What the firmware does
+After the ≈ 5 s bootloader wait it plays **Candle**. The directory is still called `neonpine_test/`.
 
-1. **Charge** (1.5 s): boost soft‑starts to 100 V (0.2 V/ms), all lamps dark.
-2. **Each lamp on its own**, LA1 → LA10, for 0.7 s on the **K side** (lamp pad 1 glows) and then 0.7 s on the **A side** (pad 2 glows),
-   each after 0.4 s dark so HV is back at the setpoint when the lamp has to strike.
-   This walks every switch once, so it checks the pin map (mcu‑netlist.md tables): a wrong lamp or a wrong electrode means a
-   swapped net, assembly fault or table error.
-3. **All K** 2 s, **all A** 2 s, **all AC** 3 s (each lamp alternates electrodes at 100 Hz, so both glow).
-   With all ten lamps on, the load (≈ 1 W at 105 V, DESIGN.md §2.3) is above what the boost delivers, so expect HV to sag
-   and lamps to flicker or drop out. The status shows how far HV sags – that measures the real boost capability.
-4. Repeat from step 2.
+### Animations (the NeonPine simulator artifact, ported to fixed point in `anim.c`)
+| # | Name | |
+|---|---|---|
+| 0 | candle | every electrode flickers on its own (noise), with occasional dips |
+| 1 | breathe | the whole tree breathes (5.5 s) while the glow drifts left ↔ right (13 s) |
+| 2 | twinkle | random electrodes swell (0.35 s) and fade (0.55 s), periods 2.2–5.4 s |
+| 3 | garland | chase up the tiers, half a lamp at a time, then a star flash (5.2 s cycle) |
+| 4 | snowfall | soft pulses drifting down the tiers |
+| 5 | heartbeat | steady tree, the star beats twice per second: left electrode, then right |
+| 6 | drift | modes 0–5, 3 min each |
+| 7 | sleep | candle + the sleep timer |
 
-**TP2 (trunk) tap** pauses / resumes the sequence on the current step. The baseline is taken during the first 0.3 s, so
-don't touch the pad while plugging in.
+Mode changes crossfade over 1.5 s. Checked on the PC against the simulator's formulas (deterministic modes within 0.6 %).
+* **Electrodes:** the simulator's e1 (left) is lamp pad 1 = K switch, e2 (right) is pad 2 = A switch; pad 1 is the left
+  lead on every lamp (`NeonPine.kicad_pcb`). Both share the lamp's PWM window (left first), at most 100 % together.
+* **Brightness:** the simulator dims with the HV rail (75–105 V). With PWM every window has to strike anew, which needs
+  up to 90 V, so by default the same 1/3 … 1 range is applied to the duty and HV stays at 100 V.
+  `nptest.py dim rail` switches to the simulator's rail dimming (75–105 V, kick to ≥ 95 V on start) to try it.
+* Bring‑up shows, over USB only: `test` (the pin‑map sequence: each lamp's left then right electrode, then all,
+  then a brightness sweep), `sweep`, `glow`.
+
+### Touch pad TP2
+| Gesture | Action |
+|---|---|
+| tap | next animation |
+| double tap | sleep timer on/off: dims over 20 min, then off |
+| triple tap | style: normal (7 ms / 400 µs, steady) ↔ retro (7 ms / 300 µs, random flicker) |
+| hold > 0.45 s | brightness ramp, alternating direction |
+| hold 3 s | off / on. While off, nothing else reacts (like the simulator) |
+
+Touch threshold: baseline + 500 (board 1: idle ±160, touched +1100…+2000). The baseline is taken in the first 0.3 s,
+so don't touch the pad while plugging in. Settings (animation, style, brightness) are not stored across power‑ups.
+
+### Light sensor (Q2 TEPT4400 – not fitted on board 1 yet, untested)
+Every 100 ms all lamps would go dark for 0.5 ms while PA1 is read, giving room light without the tree's own
+light (DESIGN.md: 44 mV per lux). **That blanking is commented out for now** (`ms_task`): the reading is the plain
+average, so it includes the tree's own light, and waves are only detected as shadows.
+* **Off in daylight** above 100 lx, **on at dusk** below 20 lx, each after 5 s. The simulator says 150 lx, but with
+  the 22k load the sensor saturates at ≈ 110 lx.
+* **Room‑adaptive brightness:** 0.75 … 1.0 from 0 … 31 lx (simulator formula). Without Q2 the reading is 0 lx =
+  "dark room", so the tree runs at the 0.75 end.
+* **Wave = next animation:** a 0.2–1.5 s shadow (lit room) or a 0.2–1.5 s rise of the tree's light reflected back
+  (dark room). The thresholds are guesses until Q2 is fitted; tune `WAVE_*` in `neonpine_test.c`.
+* `nptest.py autolight off` disables all of it.
 
 ### Boost control
-TIM2_CH3 on PD6 runs at 30 kHz with a **fixed gate on‑time** (default 15 µs → I_pk ≈ 0.23 A in 330 µH, inside the
-300 mA rating of the SWPA6028). For each period, the main loop reads HV (PD3/A4, scaled against Vrefint) and either lets
-the pulse through or skips it (pulse skipping). The on‑time can be raised to 20 µs (the 60 % clamp) with `nptest.py ton 20`.
-Pulse skipping can make L11 audibly whine – that's expected in this test firmware.
+TIM2_CH3 on PD6, default **40 kHz with a fixed 20 µs gate on-time** (I_pk ≈ 0.30 A in L11; the CR5040-331M is rated
+400 mA). For each period, the main loop reads HV (PD3/A4, scaled against Vrefint) and either lets the pulse through or
+skips it (pulse skipping). Measured on board 1 with a fast D1: about 0.45 W. Tune with `nptest.py ton` / `freq`
+(the period always keeps ≥ 4 µs off-time so L11 empties).
+
+### Brightness, PWM and power budget
+* **PWM** runs from the main loop: 7 ms frame. Every lit electrode gets at least the **minimum on-time** (400 µs normal,
+  300 µs retro) because neon needs time to strike; shorter pulses don't light reliably. Tune with
+  `nptest.py pwm <frame ms> <min µs>`. `on-time = min + (frame − min) × duty` (bring‑up shows: duty = (level/255)²).
+* Found by eye on board 1: 7 ms is the slowest frame without visible flicker. Shorter frames need a *longer* minimum
+  (2 ms → 400 µs, 4 ms → 200 µs stable; 4 ms / 50 µs and 2 ms / 200 µs unstable), and at 1–3 ms with
+  the old minimum some lamps didn't light at all.
+* The ten lamps' on-windows are **staggered** across the frame (lamp i starts i/10 later), so the HV load is smooth.
+  If they all switched on together, C4 couldn't buffer the block and the boost would idle for the rest of the frame.
+* A lamp takes new on-times only at the start of its own window, so no pulse changes halfway.
+* **Power budget:** if HV (averaged over ~16 ms) sags more than 3 V below target, every on-time is scaled down (only the
+  part above the minimum, so no pulse drops below the strike time);
+  within 1 V it creeps back (full in 256 ms). Status shows `power budget N/255 (LIMITING)`. With all 10 lamps at full,
+  board 1 settles at ≈ 89/255 with HV ≈ 98.5 V. `nptest.py budget off` disables it (the rail then sags instead).
+
+### Timing
+The lamp edges are switched by the main loop, so long work in front of an edge would bend that pulse. The main loop
+only starts work (animation steps ≤ ~125 µs, the 1 ms core, deferred jobs: touch, light, status, budget scaling) when
+the next lamp edge is far enough away. The HV conversion runs in the background between passes. Measured on board 1 with
+no USB traffic: lamp edges switch ≤ ~55 µs late (`nptest.py` shows "edges late ≤"). USB traffic adds up to ~1 ms
+during a status read.
 
 Protection (firmware only, the real limits are R2/D2/F1):
 * **OVERVOLTAGE**: HV ≥ 115 V → boost off, lamps off.
@@ -125,9 +180,16 @@ A fault latches until `nptest.py clear` or re‑plugging.
 ## nptest.py
 ```sh
 tools/nptest.py watch          # live status: HV, VDD, duty, light sensor, touch, lamp states, faults
-tools/nptest.py pause on       # freeze the sequence on the current step
+tools/nptest.py show garland   # candle breathe twinkle garland snowfall heartbeat drift sleep | test sweep glow
+tools/nptest.py sleep on       # sleep timer
+tools/nptest.py style retro    # normal / retro
+tools/nptest.py bright 128     # overall brightness 8-255
+tools/nptest.py dim rail       # HV rail dimming like the simulator (default: duty)
+tools/nptest.py autolight off  # light sensor features off
+tools/nptest.py wave           # pretend a hand waved
+tools/nptest.py pause on       # freeze the test sequence on the current step
 tools/nptest.py hv 80          # setpoint 0–105 V (0 = boost off)
-tools/nptest.py lamps all=off 3k 7a 10ac   # manual lamp states (switches to manual mode)
+tools/nptest.py lamps all=off 3k 7a 10ac   # manual: k = left electrode, a = right, ac = both (manual mode)
 tools/nptest.py mode auto      # back to the sequence (restarts at "charge")
 tools/nptest.py mode off       # boost + lamps off
 tools/nptest.py bootloader     # reboot into the USB bootloader

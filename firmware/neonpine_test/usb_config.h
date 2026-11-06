@@ -23,7 +23,7 @@
 #define RV003USB_USE_REBOOT_FEATURE_REPORT 1
 
 // Feature report IDs, see neonpine_test.c and ../tools/nptest.py
-#define NP_REPORT_STATUS  0xaa  // GET: 36-byte status block
+#define NP_REPORT_STATUS  0xaa  // GET: 52-byte status block
 #define NP_REPORT_COMMAND 0xab  // SET: 8-byte command
 #define NP_REPORT_REBOOT  0xfd  // SET: reboot to bootloader (handled inside rv003usb)
 
@@ -43,7 +43,7 @@ static const uint8_t device_descriptor[] = {
 	0x08, //Max packet size for EP0 (This has to be 8 because of the USB Low-Speed Standard)
 	0x09, 0x12, //ID Vendor  0x1209 (pid.codes)
 	0x03, 0xd0, //ID Product 0xD003 = rv003usb application, what minichlink looks for to reboot into the bootloader
-	0x01, 0x00, //ID Rev = test firmware version
+	0x02, 0x00, //ID Rev = firmware version
 	1, //Manufacturer string
 	2, //Product string
 	3, //Serial string
@@ -55,7 +55,7 @@ static const uint8_t special_hid_desc[] = {
 	HID_USAGE      ( 0x00 ),
 	HID_REPORT_SIZE ( 8 ),
 	HID_COLLECTION ( HID_COLLECTION_LOGICAL ),
-		HID_REPORT_COUNT   ( 35 ),
+		HID_REPORT_COUNT   ( 51 ),
 		HID_REPORT_ID      ( NP_REPORT_STATUS )
 		HID_USAGE          ( 0x01 ),
 		HID_FEATURE        ( HID_DATA | HID_VARIABLE | HID_ABSOLUTE ) ,
