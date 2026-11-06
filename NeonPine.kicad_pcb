@@ -21139,6 +21139,32 @@
 			)
 		)
 	)
+	(gr_poly
+		(pts
+			(xy 87.45 102.4) (xy 87.8 102.4) (xy 87.45 102.05)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "B.Cu")
+		(net "+5V")
+		(uuid "ad6647cf-1f15-4121-875b-938ac552a784")
+	)
+	(gr_poly
+		(pts
+			(xy 87.5 100.1) (xy 87.5 99.45) (xy 85.5 99.45) (xy 86.1 100.1)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "B.Cu")
+		(net "+5V")
+		(uuid "0612980d-f478-4211-995f-fcfa274cf94d")
+	)
 	(gr_line
 		(start 73.548725 94.508147)
 		(end 73.603072 94.251576)
@@ -30893,14 +30919,6 @@
 		(uuid "7a39a35c-4f00-4ef2-852b-294fa35148ab")
 	)
 	(segment
-		(start 87.8517 101.2)
-		(end 87.8517 102.305)
-		(width 0.4)
-		(layer "B.Cu")
-		(net "+5V")
-		(uuid "7fcdb0d0-2384-406c-a396-f8bf1601d4e0")
-	)
-	(segment
 		(start 92.82 82.58)
 		(end 90.1705 85.2295)
 		(width 0.4)
@@ -30957,12 +30975,28 @@
 		(uuid "91244615-b113-4f7b-aa5a-a8357f8f6b83")
 	)
 	(segment
+		(start 91.4465 105.9)
+		(end 91.95 105.9)
+		(width 0.4)
+		(layer "B.Cu")
+		(net "+5V")
+		(uuid "ab4a7350-c16b-4c1a-b094-45c3dd837833")
+	)
+	(segment
 		(start 119.65 94.78)
 		(end 119.65 94.1)
 		(width 0.4)
 		(layer "B.Cu")
 		(net "+5V")
 		(uuid "add083f6-05e3-42a8-be06-10f3cf833b4f")
+	)
+	(segment
+		(start 86.75 101.2035)
+		(end 91.4465 105.9)
+		(width 0.4)
+		(layer "B.Cu")
+		(net "+5V")
+		(uuid "b0ae6ee1-ce5e-482b-8f49-9d061f22e4ad")
 	)
 	(segment
 		(start 99.1626 83.4375)
@@ -30987,30 +31021,6 @@
 		(layer "B.Cu")
 		(net "+5V")
 		(uuid "bb804366-48ee-4efa-bc01-243c1024a017")
-	)
-	(segment
-		(start 87.8517 102.305)
-		(end 91.4465 105.9)
-		(width 0.4)
-		(layer "B.Cu")
-		(net "+5V")
-		(uuid "c378aac6-e6f2-483c-95c1-79db6d1bcc55")
-	)
-	(segment
-		(start 86.75 101.2)
-		(end 87.8517 101.2)
-		(width 0.4)
-		(layer "B.Cu")
-		(net "+5V")
-		(uuid "ca5df331-1f8c-40df-9c22-c6152579afe8")
-	)
-	(segment
-		(start 91.4465 105.9)
-		(end 91.95 105.9)
-		(width 0.4)
-		(layer "B.Cu")
-		(net "+5V")
-		(uuid "cb287e2f-5445-4ba0-a57e-9cb21a680874")
 	)
 	(segment
 		(start 120.588 89.9323)
@@ -31043,6 +31053,14 @@
 		(layer "B.Cu")
 		(net "+5V")
 		(uuid "d85bfa3d-36a3-45d8-85e6-37d1d413285c")
+	)
+	(segment
+		(start 86.75 101.2)
+		(end 86.75 101.2035)
+		(width 0.4)
+		(layer "B.Cu")
+		(net "+5V")
+		(uuid "f5dd9102-bfea-441f-8a7e-96a84a1cec58")
 	)
 	(segment
 		(start 114.209 94.6)
