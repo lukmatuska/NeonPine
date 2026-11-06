@@ -18,7 +18,15 @@ FLASH_COMMAND=$(MINICHLINK)/minichlink -C b003boot -w $(TARGET).bin flash -b
 
 include $(CH32FUN)/ch32fun.mk
 
-flash : cv_flash
+# The last 1 kB of flash is the settings / custom animation store (anim.h): the image must stay below it.
+STORE_ADDR_OFFSET := 15360
+build : size-check
+size-check : $(TARGET).bin
+	@sz=$$(wc -c < $(TARGET).bin); if [ $$sz -gt $(STORE_ADDR_OFFSET) ]; then \
+		echo "$(TARGET).bin is $$sz bytes: it would overwrite the store at 0x3C00 (max $(STORE_ADDR_OFFSET))"; rm -f $(TARGET).bin; exit 1; \
+	else echo "$(TARGET).bin: $$sz of $(STORE_ADDR_OFFSET) bytes"; fi
+
+flash : size-check cv_flash
 
 flash-swd : $(TARGET).bin $(MINICHLINK)/minichlink
 	$(MINICHLINK)/minichlink -w $< flash -b

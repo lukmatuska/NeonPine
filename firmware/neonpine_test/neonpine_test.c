@@ -24,16 +24,22 @@
 //   off), triple tap = style, hold = brightness ramp, hold 3 s = off / on.
 // * Light sensor (TEPT4400 on PA1): read in a 0.5 ms all-dark slot every 100 ms, so the tree's own light
 //   doesn't count. Off in daylight, on at dusk, room-adaptive brightness, wave a hand = next animation.
-// * USB HID 1209:D003 with feature reports: 0xAA status, 0xAB commands (../tools/nptest.py).
-//   minichlink reboots it into the rv003usb bootloader by itself (report 0xFD) before flashing.
+// * USB HID 1209:D003 with feature reports: 0xAA status, 0xAB commands (../tools/nptest.py), 0xAC live
+//   frames and 0xAE store pages (../../companion). minichlink reboots it into the rv003usb bootloader
+//   by itself (report 0xFD) before flashing.
+// * Store (last 1 kB of flash, anim.h): page 0 = settings (power-up animation / style / brightness,
+//   light sensor, dimming, animation parameters, tap and drift lists, sleep time, crossfade, tree name),
+//   saved 3 s after the last change; pages 1-15 = custom keyframe animations (anim.c). While a page is
+//   written the CPU stalls for ~5 ms, so boost and lamps are switched off for it.
 
 #include "ch32fun.h"
 #include <string.h>
+#include <stddef.h>
 #include "rv003usb.h"
 #include "ch32v003_touch.h"
 #include "anim.h"
 
-#define FW_VERSION 2
+#define FW_VERSION 3
 #define Q 4096  // Q12 fixed point: 1.0
 
 // ---- Boost -------------------------------------------------------------------------------------
@@ -108,7 +114,9 @@ enum { STYLE_NORMAL = 0, STYLE_RETRO = 1 };
 enum { GESTURE_TAP = 1, GESTURE_DOUBLE = 2, GESTURE_HOLD = 3, GESTURE_LONG = 4, GESTURE_TRIPLE = 5, GESTURE_WAVE = 6 };
 
 #define ANIM_PERIOD_MS 20        // animation frame rate: 50 Hz
-#define SLEEP_MS       1200000u  // sleep timer: dims over 20 min, then off
+#define SLEEP_MIN      20        // sleep timer default: dims over 20 min, then off
+#define LIVE_TIMEOUT_MS 2500     // live mode ends this long after the last frame
+#define SAVE_DELAY_MS  3000      // settings are saved this long after the last change
 
 // TP2 (board 1): idle ~3700 +-160, touched +1100..+2000 (sum of 9 ADC samples)
 #define TOUCH_DELTA_DEFAULT  500   // pressed above baseline + this
@@ -179,7 +187,32 @@ enum {
 	CMD_AUTOLIGHT = 16,   // [2] = 0 / 1: light sensor features (auto on/off, adaptive brightness, wave)
 	CMD_DIM = 17,         // [2] = 0 dim with duty / 1 dim with the HV rail
 	CMD_WAVE = 18,        // pretend a hand waved
+	CMD_SAVE = 19,        // save the settings now (if changed)
 };
+
+// Store report (NP_REPORT_STORE): [id][page][op / state][0][64 bytes]. SET with op READ selects a page,
+// WRITE writes it (page 0: settings, applied and saved; 1..: custom blob), APPLY applies settings without
+// saving. GET returns the page; state = op until done, then ST_OK / ST_ERR.
+enum { ST_OP_READ = 1, ST_OP_WRITE = 2, ST_OP_APPLY = 3, ST_OK = 0x80, ST_ERR = 0x81 };
+
+// Settings page (store page 0). The name is only used by the companion app.
+#define CFG_MAGIC   0x4350
+#define CFG_VERSION 1
+enum { CFG_AUTOLIGHT = 1, CFG_DIM_RAIL = 2, CFG_REMEMBER = 4 };
+struct cfg_page {
+	uint16_t magic;
+	uint8_t  version, show, style, level;  // power-up show / style / brightness
+	uint8_t  flags, sleep_min;             // CFG_*, sleep timer minutes
+	uint16_t tap_mask, drift_mask;         // bits 0-7 animations, 8-15 custom 0-7
+	uint16_t drift_s;
+	uint8_t  fade_ds, rsv0;
+	struct anim_par pars[ANIM_BASIC];      // 16
+	char     name[16];                     // 34
+	uint8_t  rsv1[12];
+	uint16_t sum;                          // 62: sum of bytes 0-61
+};
+_Static_assert( sizeof( struct cfg_page ) == 64, "settings page" );
+#define CFG_SUM 62
 
 struct np_status {
 	uint8_t  report_id;   //  0 = NP_REPORT_STATUS
@@ -216,13 +249,27 @@ struct np_status {
 	uint8_t  adapt;       // 47 room-adaptive brightness factor, /255
 	uint16_t late_us;     // 48 latest lamp edge in the last 100 ms (how late an on/off switch happened)
 	uint16_t late_peak_us;// 50 the same since the previous status read
+	uint8_t  caps;        // 52 b0 store, b1 live frames, b2 animation parameters
+	uint8_t  store_pages; // 53
+	uint8_t  n_custom;    // 54 valid custom animations in the store
+	uint8_t  cfg_flags;   // 55 settings flags (CFG_*), b7 unsaved changes
+	uint16_t store_gen;   // 56 counts store writes (the app re-reads when it changes)
+	uint16_t stack_free;  // 58 bytes of stack never used since power-up
+	uint32_t uid;         // 60 chip unique ID (folded to 32 bits)
 } __attribute__((packed, aligned(4)));
-_Static_assert( sizeof( struct np_status ) == 52, "status report is 51 bytes + id (usb_config.h)" );
+_Static_assert( sizeof( struct np_status ) == 64, "status report is 63 bytes + id (usb_config.h)" );
 
 static struct np_status status;
 static uint8_t cmd_buf[8] __attribute__((aligned(4)));
 static volatile uint8_t cmd_pending;
 static uint8_t usb_set_report_id;
+// Store page buffer for both directions; the data starts word aligned at store_buf + 4.
+static uint8_t store_buf[68] __attribute__((aligned(4)));
+static volatile uint8_t store_req, store_lock, live_req;
+static volatile uint32_t store_req_ms;  // a page write waits a few ms, so the USB transfer's status stage is done first
+#define store_cfg ( (struct cfg_page *)( store_buf + 4 ) )
+#define flash_cfg ( (const struct cfg_page *)STORE_ADDR )
+static uint16_t store_gen;
 
 // ---- State -------------------------------------------------------------------------------------
 static uint32_t now_ms;
@@ -234,8 +281,15 @@ static uint8_t manual_level = 255, level;
 static uint8_t show = ANIM_CANDLE, prev_show = ANIM_CANDLE, style = STYLE_NORMAL, user_level = 255, gesture;
 static uint32_t fade_start, kick_until = KICK_MS;
 static uint8_t sleep_active;
-static uint32_t sleep_left_ms;
+static uint32_t sleep_left_ms, sleep_ms = SLEEP_MIN * 60000u, sleep_div;
 static uint8_t autolight = 1, daylight_off, dim_rail;
+// Settings: power-up show / style / brightness (follow the live ones with "remember"), tap list
+// (bits 0-7 animations, 8-15 custom 0-7), sleep minutes; unsaved since cfg_dirty_ms.
+static uint8_t cfg_show = ANIM_CANDLE, cfg_style, cfg_level = 255, cfg_sleep_min = SLEEP_MIN, cfg_remember = 1;
+static uint16_t tap_mask = 0xff;
+static uint8_t cfg_dirty;
+static uint32_t cfg_dirty_ms, live_until;
+static uint8_t live_return = ANIM_CANDLE;
 static int32_t sleep_q = Q, adapt_q = Q, anim_sm = Q, anim_L = Q;  // Q12 factors
 
 // Lamp PWM. Published on-times (us, per lamp and electrode) -> full_on (ticks) -> nx (ticks, after the
@@ -284,7 +338,7 @@ static uint32_t lux;
 static uint32_t outs_now = 0xffffffff;
 static uint32_t late_max, late_peak;  // SysTick ticks
 static volatile uint8_t status_read;
-static uint8_t job_touch, job_light, job_status, job_scale;  // deferred work, run in gaps between lamp edges
+static uint8_t job_touch, job_light, job_status, job_scale, job_save, job_stack;  // deferred work, run in gaps between lamp edges
 
 // ---- Lamp outputs ------------------------------------------------------------------------------
 
@@ -531,12 +585,14 @@ static void set_style( int st )
 static void sleep_set( int on )
 {
 	sleep_active = on;
-	sleep_left_ms = SLEEP_MS;
+	sleep_ms = cfg_sleep_min * 60000u;
+	sleep_left_ms = sleep_ms;
+	sleep_div = sleep_ms / Q + 1;
 }
 
 static void set_show( int sh )
 {
-	if( sh != show ) { prev_show = show; fade_start = now_ms; }
+	if( sh != show ) { prev_show = show; fade_start = now_ms; anim_prev_t0 = anim_cur_t0; anim_cur_t0 = now_ms; }
 	show = sh;
 	if( sh == ANIM_SLEEP && !sleep_active ) sleep_set( 1 );
 	step = sh == SHOW_SWEEP ? SEQ_SWEEP : SEQ_CHARGE;
@@ -557,6 +613,37 @@ static void power_off( void )
 	sleep_active = 0;
 }
 
+// Settings changed: saved SAVE_DELAY_MS after the last change.
+static void cfg_touch( void )
+{
+	cfg_dirty = 1;
+	cfg_dirty_ms = now_ms;
+}
+
+// Show / style / brightness changed by the user: with "remember" they are the power-up values too.
+static void state_changed( void )
+{
+	if( !cfg_remember ) return;
+	if( show <= ANIM_DRIFT || show >= ANIM_CUSTOM0 ) cfg_show = show;  // not sleep, bring-up shows, live
+	cfg_style = style;
+	cfg_level = user_level;
+	cfg_touch();
+}
+
+// Next show in the tap list: animations 0-7, then the custom ones (bits 8-15).
+static int next_show( void )
+{
+	int s = show == ANIM_LIVE ? live_return : show;
+	int cur = s < ANIMS ? s : s >= ANIM_CUSTOM0 ? s - ANIM_CUSTOM0 + 8 : -1;
+	for( int k = 1; k <= 16; k++ )
+	{
+		int i = ( cur + k ) & 15;
+		if( !( tap_mask >> i & 1 ) || ( i >= 8 && i - 8 >= anim_custom_count() ) ) continue;
+		return i < 8 ? i : ANIM_CUSTOM0 + i - 8;
+	}
+	return s < ANIMS ? s : ANIM_CANDLE;
+}
+
 static void on_gesture( int g )
 {
 	gesture = ( ( gesture + 0x10 ) & 0xf0 ) | g;
@@ -570,10 +657,11 @@ static void on_gesture( int g )
 	if( g == GESTURE_TAP || g == GESTURE_WAVE )
 	{
 		mode = MODE_AUTO;
-		set_show( show < ANIMS - 1 ? show + 1 : 0 );  // next animation; from a test show back to the first
+		set_show( next_show() );
+		state_changed();
 	}
 	else if( g == GESTURE_DOUBLE ) sleep_set( !sleep_active );
-	else if( g == GESTURE_TRIPLE ) set_style( !style );
+	else if( g == GESTURE_TRIPLE ) { set_style( !style ); state_changed(); }
 }
 
 // ---- Touch -------------------------------------------------------------------------------------
@@ -636,7 +724,7 @@ static void touch_task( void )
 	{
 		uint32_t held = ms - press_ms;
 		if( held < TAP_MAX_MS ) { taps++; release_ms = ms; }
-		else if( !hold_done ) { ramp_dir = -ramp_dir; gesture = ( ( gesture + 0x10 ) & 0xf0 ) | GESTURE_HOLD; }
+		else if( !hold_done ) { ramp_dir = -ramp_dir; gesture = ( ( gesture + 0x10 ) & 0xf0 ) | GESTURE_HOLD; state_changed(); }
 	}
 	touched = t;
 
@@ -654,7 +742,8 @@ static int32_t adapt_from_lux( uint32_t lx )
 {
 	// simulator: 0.75 + 0.25 * clamp(log10(5 lux + 1) / 2.2); log2 from the bit length, linear between
 	uint32_t y = 5 * lx + 1;
-	uint32_t msb = 31 - __builtin_clz( y );
+	uint32_t msb = 0;
+	while( y >> ( msb + 1 ) ) msb++;  // not __builtin_clz: that pulls in a 256-byte table
 	uint32_t log2_q16 = ( msb << 16 ) + ( ( ( y << 16 ) >> msb ) & 0xffff );
 	int32_t x = ( log2_q16 >> 4 ) * 8967 >> 16;  // * log10(2) / 2.2, to Q12
 	if( x > Q ) x = Q;
@@ -720,6 +809,138 @@ static void light_task( void )
 	}
 }
 
+// ---- Store -------------------------------------------------------------------------------------
+
+// Erase + program one 64-byte page (fast mode). The CPU stalls ~5 ms on the busy flash and TIM2 would
+// keep its last gate setting, so the boost and the lamps are switched off first. 0 = verified.
+static int flash_page_write( uint32_t addr, const uint32_t * src )
+{
+	TIM2->CH3CVR = 0;
+	outs_set( 0 );
+	FLASH->KEYR = FLASH_KEY1;
+	FLASH->KEYR = FLASH_KEY2;
+	FLASH->MODEKEYR = FLASH_KEY1;
+	FLASH->MODEKEYR = FLASH_KEY2;
+	FLASH->CTLR = CR_PAGE_ER;
+	FLASH->ADDR = addr;
+	FLASH->CTLR = CR_PAGE_ER | CR_STRT_Set;
+	while( FLASH->STATR & FLASH_STATR_BSY );
+	FLASH->CTLR = CR_PAGE_PG;
+	FLASH->CTLR = CR_PAGE_PG | CR_BUF_RST;
+	while( FLASH->STATR & FLASH_STATR_BSY );
+	for( int i = 0; i < 16; i++ )
+	{
+		( (volatile uint32_t *)addr )[i] = src[i];
+		FLASH->CTLR = CR_PAGE_PG | CR_BUF_LOAD;
+		while( FLASH->STATR & FLASH_STATR_BSY );
+	}
+	FLASH->ADDR = addr;
+	FLASH->CTLR = CR_PAGE_PG | CR_STRT_Set;
+	while( FLASH->STATR & FLASH_STATR_BSY );
+	FLASH->CTLR = CR_LOCK_Set | 0x8000;  // LOCK + FLOCK (fast mode)
+	return memcmp( (const void *)addr, src, 64 );
+}
+
+static uint32_t sum16( const uint8_t * p, int n )
+{
+	uint32_t s = 0;
+	while( n-- ) s += *p++;
+	return s & 0xffff;
+}
+
+static void cfg_build( struct cfg_page * p )  // everything but the name
+{
+	memset( p, 0, offsetof( struct cfg_page, name ) );
+	memset( p->rsv1, 0, sizeof( p->rsv1 ) );
+	p->magic = CFG_MAGIC;
+	p->version = CFG_VERSION;
+	p->show = cfg_show;
+	p->style = cfg_style;
+	p->level = cfg_level;
+	p->flags = ( autolight ? CFG_AUTOLIGHT : 0 ) | ( dim_rail ? CFG_DIM_RAIL : 0 ) | ( cfg_remember ? CFG_REMEMBER : 0 );
+	p->sleep_min = cfg_sleep_min;
+	p->tap_mask = tap_mask;
+	p->drift_mask = anim_drift_mask;
+	p->drift_s = anim_drift_s;
+	p->fade_ds = anim_fade_ds;
+	memcpy( p->pars, anim_pars, sizeof( anim_pars ) );
+	p->sum = sum16( (const uint8_t *)p, CFG_SUM );
+}
+
+static int cfg_apply( const struct cfg_page * p )
+{
+	if( p->magic != CFG_MAGIC || p->version != CFG_VERSION || p->sum != sum16( (const uint8_t *)p, CFG_SUM ) ) return 0;
+	cfg_show = p->show;
+	cfg_style = p->style ? STYLE_RETRO : STYLE_NORMAL;
+	cfg_level = p->level < USER_LEVEL_MIN ? USER_LEVEL_MIN : p->level;
+	autolight = ( p->flags & CFG_AUTOLIGHT ) != 0;
+	dim_rail = ( p->flags & CFG_DIM_RAIL ) != 0;
+	cfg_remember = ( p->flags & CFG_REMEMBER ) != 0;
+	cfg_sleep_min = p->sleep_min ? p->sleep_min : SLEEP_MIN;
+	tap_mask = p->tap_mask;
+	anim_drift_mask = p->drift_mask;
+	anim_drift_s = p->drift_s < 5 ? 5 : p->drift_s;
+	anim_fade_ds = p->fade_ds;
+	memcpy( anim_pars, p->pars, sizeof( anim_pars ) );
+	anim_params_changed();
+	return 1;
+}
+
+static void cfg_name_from_flash( struct cfg_page * p )
+{
+	if( flash_cfg->magic == CFG_MAGIC ) memcpy( p->name, flash_cfg->name, 16 );
+	else memset( p->name, 0, 16 );
+}
+
+// A store request from USB (NP_REPORT_STORE), in store_buf.
+static void store_task( void )
+{
+	store_lock = 1;
+	store_req = 0;
+	int page = store_buf[1], op = store_buf[2], st = ST_OK;
+	uint8_t * d = store_buf + 4;
+	if( page >= STORE_PAGES || op < ST_OP_READ || op > ST_OP_APPLY || ( page && op == ST_OP_APPLY ) ) st = ST_ERR;
+	else if( page == 0 )
+	{
+		if( op == ST_OP_READ ) cfg_name_from_flash( store_cfg );
+		else if( !cfg_apply( store_cfg ) ) st = ST_ERR;
+		else store_gen++;
+		cfg_build( store_cfg );  // reply: the settings as they are now
+		if( st == ST_OK && op == ST_OP_WRITE )
+		{
+			if( flash_page_write( STORE_ADDR, (const uint32_t *)d ) ) st = ST_ERR;
+			cfg_dirty = 0;
+		}
+	}
+	else
+	{
+		uint32_t addr = STORE_ADDR + page * 64;
+		if( op == ST_OP_WRITE )
+		{
+			if( flash_page_write( addr, (const uint32_t *)d ) ) st = ST_ERR;
+			anim_store_changed();
+			store_gen++;
+			if( show >= ANIM_CUSTOM0 && show - ANIM_CUSTOM0 >= anim_custom_count() ) set_show( ANIM_CANDLE );
+		}
+		memcpy( d, (const void *)addr, 64 );
+	}
+	store_buf[2] = st;
+	store_lock = 0;
+}
+
+static void save_task( void )
+{
+	store_lock = 1;
+	if( store_req ) { store_lock = 0; return; }  // a USB request is waiting for the buffer: later
+	store_buf[1] = 0xff;  // the buffer no longer holds a page the app asked for
+	store_buf[2] = 0;
+	cfg_name_from_flash( store_cfg );
+	cfg_build( store_cfg );
+	if( memcmp( store_cfg, flash_cfg, 64 ) ) flash_page_write( STORE_ADDR, (const uint32_t *)store_cfg );
+	cfg_dirty = 0;
+	store_lock = 0;
+}
+
 // ---- USB ---------------------------------------------------------------------------------------
 
 void usb_handle_user_in_request( struct usb_endpoint * e, uint8_t * scratchpad, int endp, uint32_t sendtok, struct rv003usb_internal * ist )
@@ -730,33 +951,50 @@ void usb_handle_user_in_request( struct usb_endpoint * e, uint8_t * scratchpad, 
 
 void usb_handle_hid_get_report_start( struct usb_endpoint * e, int reqLen, uint32_t lValueLSBIndexMSB )
 {
-	if( ( lValueLSBIndexMSB & 0xff ) == NP_REPORT_STATUS )
+	int id = lValueLSBIndexMSB & 0xff;
+	if( id == NP_REPORT_STATUS )
 	{
 		if( reqLen > (int)sizeof( status ) ) reqLen = sizeof( status );
 		e->opaque = (uint8_t *)&status;
 		e->max_len = reqLen;
 		status_read = 1;
 	}
+	else if( id == NP_REPORT_STORE )
+	{
+		if( reqLen > (int)sizeof( store_buf ) ) reqLen = sizeof( store_buf );
+		store_buf[0] = NP_REPORT_STORE;
+		e->opaque = store_buf;
+		e->max_len = reqLen;
+	}
 }
 
 void usb_handle_hid_set_report_start( struct usb_endpoint * e, int reqLen, uint32_t lValueLSBIndexMSB )
 {
-	usb_set_report_id = lValueLSBIndexMSB & 0xff;
-	if( usb_set_report_id != NP_REPORT_COMMAND ) return;  // 0xFD (reboot) is handled inside rv003usb
-	if( reqLen > (int)sizeof( cmd_buf ) ) reqLen = sizeof( cmd_buf );
+	int id = usb_set_report_id = lValueLSBIndexMSB & 0xff;
+	int max = id == NP_REPORT_COMMAND ? (int)sizeof( cmd_buf ) : id == NP_REPORT_LIVE ? 21 : id == NP_REPORT_STORE ? (int)sizeof( store_buf ) : 0;
+	if( !max ) return;  // 0xFD (reboot) is handled inside rv003usb
+	if( reqLen > max ) reqLen = max;
 	e->max_len = reqLen;
 }
 
 void usb_handle_user_data( struct usb_endpoint * e, int current_endpoint, uint8_t * data, int len, struct rv003usb_internal * ist )
 {
-	if( current_endpoint || usb_set_report_id != NP_REPORT_COMMAND ) return;
+	int id = usb_set_report_id;
+	uint8_t * dst = id == NP_REPORT_COMMAND ? cmd_buf : id == NP_REPORT_LIVE ? anim_live : id == NP_REPORT_STORE ? store_buf : 0;
+	if( current_endpoint || !dst ) return;
+	if( dst == store_buf && store_lock ) { usb_set_report_id = 0; return; }  // the main loop has the buffer: dropped, the app retries
 	int offset = e->count << 3;
 	int torx = e->max_len - offset;
 	if( torx > len ) torx = len;
 	if( torx <= 0 ) return;
-	memcpy( cmd_buf + offset, data, torx );
+	memcpy( dst + offset, data, torx );  // the live frame goes straight into anim_live
 	e->count++;
-	if( offset + torx >= e->max_len ) cmd_pending = 1;
+	if( offset + torx >= e->max_len )
+	{
+		if( id == NP_REPORT_COMMAND ) cmd_pending = 1;
+		else if( id == NP_REPORT_LIVE ) live_req = 1;
+		else { store_req = 1; store_req_ms = now_ms; }
+	}
 }
 
 static void handle_command( void )
@@ -806,12 +1044,19 @@ static void handle_command( void )
 	}
 	case CMD_STYLE:
 		set_style( c[2] ? STYLE_RETRO : STYLE_NORMAL );
+		state_changed();
 		break;
 	case CMD_SHOW:
-		if( c[2] < SHOWS ) { power_on(); set_show( c[2] ); }
+		if( c[2] < SHOWS || ( c[2] >= ANIM_CUSTOM0 && c[2] - ANIM_CUSTOM0 < anim_custom_count() ) )
+		{
+			power_on();
+			set_show( c[2] );
+			state_changed();
+		}
 		break;
 	case CMD_USER_LEVEL:
 		user_level = c[2] < USER_LEVEL_MIN ? USER_LEVEL_MIN : c[2];
+		state_changed();
 		break;
 	case CMD_BUDGET:
 		budget_enabled = c[2] != 0;
@@ -828,13 +1073,18 @@ static void handle_command( void )
 		break;
 	case CMD_AUTOLIGHT:
 		autolight = c[2] != 0;
+		cfg_touch();
 		break;
 	case CMD_DIM:
 		dim_rail = c[2] != 0;
 		kick_until = now_ms + KICK_MS;
+		cfg_touch();
 		break;
 	case CMD_WAVE:
 		on_gesture( GESTURE_WAVE );
+		break;
+	case CMD_SAVE:
+		if( cfg_dirty ) cfg_dirty_ms = now_ms - SAVE_DELAY_MS;
 		break;
 	}
 }
@@ -882,17 +1132,30 @@ static void ms_task( void )
 
 	if( cmd_pending ) handle_command();
 
+	// Live frames from the app: switch to live mode while they keep coming (not while the tree is off).
+	if( live_req )
+	{
+		live_req = 0;
+		if( mode != MODE_OFF && !daylight_off && !fault )
+		{
+			if( show != ANIM_LIVE ) { live_return = show; mode = MODE_AUTO; set_show( ANIM_LIVE ); }
+			live_until = ms + LIVE_TIMEOUT_MS;
+		}
+	}
+	if( show == ANIM_LIVE && (int32_t)( ms - live_until ) >= 0 ) set_show( live_return );
+	if( cfg_dirty && ms - cfg_dirty_ms >= SAVE_DELAY_MS ) job_save = 1;
+
 	// Sleep timer: dims over 20 minutes, then the tree switches off.
 	if( sleep_active && mode != MODE_OFF )
 	{
 		if( sleep_left_ms ) sleep_left_ms--;
 		else power_off();
 	}
-	if( sleep_active ) sleep_q = sleep_left_ms / ( SLEEP_MS / Q + 1 );
+	if( sleep_active ) sleep_q = sleep_left_ms / sleep_div;
 	else sleep_q = Q;
 
 	int on = mode != MODE_OFF && !daylight_off;
-	int animating = on && mode == MODE_AUTO && show < ANIMS;
+	int animating = on && mode == MODE_AUTO && IS_ANIM( show );
 
 	// HV regulation targets (VDD is re-measured every 100 ms).
 	vdd_task( ms );
@@ -941,10 +1204,10 @@ static void ms_task( void )
 		if( !anim_busy() && pub_i >= 10 && ms - anim_last >= ANIM_PERIOD_MS )
 		{
 			anim_last = ms;
-			int prev = prev_show < ANIMS ? prev_show : show;
-			uint32_t since = ms - fade_start;  // clamp first: * Q would overflow after ~17 min
-			if( since > ANIM_FADE_MS ) since = ANIM_FADE_MS;
-			anim_start( show, prev, anim_smooth( since * Q / ANIM_FADE_MS ) );
+			int prev = IS_ANIM( prev_show ) ? prev_show : show;
+			uint32_t since = ms - fade_start, fd = anim_fade_ds ? anim_fade_ds * 100 : 1;  // clamp first: * Q overflows
+			if( since > fd ) since = fd;
+			anim_start( show, prev, anim_smooth( since * Q / fd ) );
 		}
 		level = anim_L >> 4;
 		pub_key = 0xffffffff;
@@ -952,7 +1215,7 @@ static void ms_task( void )
 	else
 	{
 		anim_active = 0;
-		if( mode == MODE_AUTO && !paused && !fault && show >= ANIMS )
+		if( mode == MODE_AUTO && !paused && !fault && !IS_ANIM( show ) )
 		{
 			if( ++step_ms >= seq_len_ms( step ) )
 			{
@@ -1038,6 +1301,7 @@ static void ms_task( void )
 	}
 
 	if( ms % 16 == 5 ) job_status = 1;
+	if( ms % 1000 == 500 ) job_stack = 1;
 }
 
 // Status block for USB (every 16 ms is plenty), as a deferred job.
@@ -1081,6 +1345,29 @@ static void status_task( void )
 	status.late_peak_us = late_peak / DELAY_US_TIME;
 	if( status_read ) { status_read = 0; late_peak = 0; }
 	status.adapt = adapt_q >> 4 > 255 ? 255 : adapt_q >> 4;
+	status.caps = 7;
+	status.store_pages = STORE_PAGES;
+	status.n_custom = anim_custom_count();
+	status.cfg_flags = ( autolight ? CFG_AUTOLIGHT : 0 ) | ( dim_rail ? CFG_DIM_RAIL : 0 ) | ( cfg_remember ? CFG_REMEMBER : 0 ) | ( cfg_dirty ? 0x80 : 0 );
+	status.store_gen = store_gen;
+}
+
+// Stack use: main() paints the free RAM above .bss at start-up; whatever is still painted was never used.
+extern uint32_t _ebss[];
+#define STACK_PAINT 0xa5a5a5a5u
+
+static void __attribute__((noinline)) stack_paint( void )
+{
+	uint32_t * p = _ebss, * sp;
+	__asm__ volatile( "mv %0, sp" : "=r"( sp ) );
+	while( p < sp - 16 ) *p++ = STACK_PAINT;
+}
+
+static void stack_task( void )
+{
+	uint32_t * p = _ebss;
+	while( *p == STACK_PAINT ) p++;
+	status.stack_free = ( p - _ebss ) * 4;
 }
 
 // Every main-loop pass: lamp PWM. Returns the time (SysTick ticks) to the next lamp edge, so the main
@@ -1194,8 +1481,20 @@ static void iwdg_init( void )
 int main()
 {
 	SystemInit();
+	stack_paint();
 
 	gpio_init();  // lamps off before anything else (R2 holds the boost gate low until TIM2 runs)
+
+	// Settings and custom animations from the store
+	anim_store_changed();
+	cfg_apply( flash_cfg );  // the static initializers are the defaults
+	anim_params_changed();
+	set_style( cfg_style );
+	user_level = cfg_level;
+	if( cfg_show <= ANIM_DRIFT || ( cfg_show >= ANIM_CUSTOM0 && cfg_show - ANIM_CUSTOM0 < anim_custom_count() ) )
+		show = prev_show = cfg_show;
+	sleep_set( 0 );
+	status.uid = *(volatile uint32_t *)0x1ffff7e8 ^ *(volatile uint32_t *)0x1ffff7ec ^ *(volatile uint32_t *)0x1ffff7f0;
 
 	// Force re-enumeration: the bootloader may have just been on the bus with the same D- pull-up.
 	funPinMode( PD4, GPIO_CFGLR_OUT_10Mhz_PP );
@@ -1237,10 +1536,13 @@ int main()
 		// Deferred jobs, one per pass, only in a gap (they are not time critical).
 		if( gap > GUARD_JOB_US * DELAY_US_TIME )
 		{
-			if( job_touch ) { job_touch = 0; touch_task(); }
+			if( store_req && now_ms - store_req_ms >= 3 ) store_task();
+			else if( job_touch ) { job_touch = 0; touch_task(); }
 			else if( job_light ) { job_light = 0; if( !autolight ) ldr_dark = 0; light_task(); }
 			else if( job_scale ) { job_scale = 0; scale_task(); }
 			else if( job_status ) { job_status = 0; status_task(); }
+			else if( job_save ) { job_save = 0; save_task(); }
+			else if( job_stack ) { job_stack = 0; stack_task(); }
 		}
 	}
 }

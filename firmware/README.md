@@ -6,6 +6,7 @@
 | `neonpine_test/` | The firmware (1209:D003): HV boost, the 8 simulator animations (`anim.c`), touch UI, light sensor, sleep timer, bring‑up shows, status over USB |
 | `installer/` | Writes the bootloader + option bytes from the chip itself, for programmers that only write main flash (PicoRVD) |
 | `tools/nptest.py` | Talks to the firmware over USB (Linux hidraw, no pip packages) |
+| `../companion/` | The **NeonPine Companion** desktop app (Linux + Windows, tray): animations, custom keyframe animations, live modes, settings, diagnostics, firmware updates |
 | `tools/gen_anim_tables.py` | Generates `neonpine_test/anim_tables.h` (sine, e^−x, noise permutation) |
 | `tools/99-neonpine.rules` | udev rule: user access to the bootloader, the test firmware and the WCH‑LinkE |
 
@@ -83,6 +84,7 @@ First board (2026-11-05): installed on the first run. Option bytes `00ff5aa5`, a
 ```sh
 make flash
 ```
+(or the Firmware page of the companion app, which does the same with a Python port of minichlink's b003boot programmer.)
 `minichlink -C b003boot` finds the running test firmware (1209:D003) and sends it the reboot feature report. The board
 re‑enumerates as the bootloader (1209:B003), minichlink writes the new image and starts it (`-b`).
 
@@ -94,7 +96,8 @@ until make -C neonpine_test flash; do sleep 0.3; done
 The SWD path (`make flash-swd`, or `make first-flash` again) always works.
 
 ## What the firmware does
-After the ≈ 5 s bootloader wait it plays **Candle**. The directory is still called `neonpine_test/`.
+After the ≈ 5 s bootloader wait it plays the saved animation (**Candle** on a fresh board). The directory is still called
+`neonpine_test/`.
 
 ### Animations (the NeonPine simulator artifact, ported to fixed point in `anim.c`)
 | # | Name | |
@@ -105,10 +108,13 @@ After the ≈ 5 s bootloader wait it plays **Candle**. The directory is still ca
 | 3 | garland | chase up the tiers, half a lamp at a time, then a star flash (5.2 s cycle) |
 | 4 | snowfall | soft pulses drifting down the tiers |
 | 5 | heartbeat | steady tree, the star beats twice per second: left electrode, then right |
-| 6 | drift | modes 0–5, 3 min each |
+| 6 | drift | the drift list (default modes 0–5), 3 min each |
 | 7 | sleep | candle + the sleep timer |
+| 15 | live | frames streamed over USB by the companion app; back to the previous show 2.5 s after the last frame |
+| 16–23 | custom | keyframe animations from the store (made in the companion app) |
 
-Mode changes crossfade over 1.5 s. Checked on the PC against the simulator's formulas (deterministic modes within 0.6 %).
+Mode changes crossfade over 1.5 s (setting). Modes 0–5 each have a **speed**, **gain** and **offset** (settings page), so the
+companion app can retune them; the defaults (×1, 100 %, 0) are the simulator's animations. Checked on the PC against the simulator's formulas (deterministic modes within 0.6 %).
 * **Electrodes:** the simulator's e1 (left) is lamp pad 1 = K switch, e2 (right) is pad 2 = A switch; pad 1 is the left
   lead on every lamp (`NeonPine.kicad_pcb`). Both share the lamp's PWM window (left first), at most 100 % together.
 * **Brightness:** the simulator dims with the HV rail (75–105 V). With PWM every window has to strike anew, which needs
@@ -126,8 +132,27 @@ Mode changes crossfade over 1.5 s. Checked on the PC against the simulator's for
 | hold > 0.45 s | brightness ramp, alternating direction |
 | hold 3 s | off / on. While off, nothing else reacts (like the simulator) |
 
+Tap and wave step through the **tap list** (setting; default the eight animations, custom ones can be added).
 Touch threshold: baseline + 500 (board 1: idle ±160, touched +1100…+2000). The baseline is taken in the first 0.3 s,
-so don't touch the pad while plugging in. Settings (animation, style, brightness) are not stored across power‑ups.
+so don't touch the pad while plugging in.
+
+### Store: settings and custom animations (fw v3)
+The last 1 kB of flash (0x3C00–0x3FFF, 16 × 64‑byte pages) holds:
+* **Page 0 – settings** (`struct cfg_page` in `neonpine_test.c`): power‑up animation / style / brightness (with
+  "remember" they follow the last touch or USB change), light sensor on/off, dimming mode, sleep minutes, tap list, drift
+  list and time per animation, crossfade time, speed/gain/offset of modes 0–5, and a 16‑character tree name. Changes are
+  saved 3 s after the last one (only if the page differs).
+* **Pages 1–15 – custom animations** (format at the top of `anim.c`): up to 8 animations, keys of 10 × 2 four‑bit levels,
+  a duration (≤ 16.4 s) and a transition (hold / linear / smooth) each, 12 bytes per key, 952 bytes in total. The blob is
+  checksummed and fully validated before anything plays it; the app writes the header page last.
+
+Writing a page stalls the CPU ~5 ms on the busy flash; boost and lamps are switched off for it (a short blink), and the
+write waits 3 ms after the USB request so its status stage completes first. **Firmware images must stay below 15 360
+bytes** so updates don't erase the store – `make` checks it (`size-check`); minichlink and the app only erase the image's
+own pages.
+
+RAM is the tight resource (2 kB, 460 B of it is the touch routine running from RAM): `nptest.py` / the app show the stack
+never used since power‑up (board 1, after hammering USB: 168 B free).
 
 ### Light sensor (Q2 TEPT4400 – not fitted on board 1 yet, untested)
 Every 100 ms all lamps would go dark for 0.5 ms while PA1 is read, giving room light without the tree's own
@@ -193,6 +218,8 @@ tools/nptest.py lamps all=off 3k 7a 10ac   # manual: k = left electrode, a = rig
 tools/nptest.py mode auto      # back to the sequence (restarts at "charge")
 tools/nptest.py mode off       # boost + lamps off
 tools/nptest.py bootloader     # reboot into the USB bootloader
+tools/nptest.py show custom0   # a custom animation from the store (custom0 .. custom7)
+tools/nptest.py save           # save the settings now
 ```
 
 Bench checks this enables (manufacturing.md §5):
@@ -201,7 +228,21 @@ Bench checks this enables (manufacturing.md §5):
 * Light sensor: the value with the hood/hand vs. room light. Touch: raw value vs. baseline. If tap detection is too eager
   or too deaf, set the threshold with `nptest.py touch N`.
 
+## USB protocol (fw v3)
+Feature reports on 1209:D003 (see `usb_config.h`, `../companion/neonpine_companion/device.py`):
+
+| ID | Dir | Bytes | |
+|---|---|---|---|
+| 0xAA | GET | 64 | status (`struct np_status`; v3 adds caps, store pages, custom count, settings flags, store generation, free stack, chip UID) |
+| 0xAB | SET | 8 | command `[0xAB][cmd][args]` – commands 1–18 as in `nptest.py`, 19 = save settings now |
+| 0xAC | SET | 21 | live frame `[0xAC][left LA1–10][right LA1–10]`, 0–255 |
+| 0xAE | SET/GET | 68 | store page `[0xAE][page][op/state][seq][64 bytes]`: op 1 read, 2 write, 3 apply settings without saving; the reply has state 0x80 ok / 0x81 error and echoes `seq` |
+| 0xFD | SET | 7 | reboot into the bootloader (rv003usb) |
+
 ## Notes
+* The board has no switchable D− pull‑up, so the host doesn't notice when the chip restarts into the bootloader. Whoever
+  asks for the reboot has to keep talking to the old device until the host resets the port (Linux: after ~1 s of errors,
+  while the hidraw node is open) – minichlink and the app both do that.
 * Pinned libraries: rv003usb `16d5cd4` with ch32fun `1e4887e` (see `Makefile`); `bootloader/bootloader.c` and the linker script are
   unmodified copies from that commit, with the configuration in `bootloader/usb_config.h`.
 * VID:PID 1209:D003 / 1209:B003 are rv003usb's shared pid.codes IDs, fine for development. A product needs its own PID.

@@ -32,9 +32,16 @@
 3. The tree lights up. Neon lamps may take a few seconds to light the first time in a completely dark room. This is normal.
 
 ### Connecting to a computer
-NeonPine can also be plugged into a computer's USB port. It then appears as a USB device (no driver needed)
-`[describe the functions once the firmware is final: settings app / animations / firmware updates]`. The tree keeps working
-normally while it is connected.
+NeonPine can also be plugged into a computer's USB port. It then appears as a USB device (no driver needed on Windows).
+With the **NeonPine Companion** app (Windows and Linux; it sits in the system tray) you can:
+* switch animations, set the brightness, the sleep timer and the retro flicker,
+* tune the built‑in animations (speed, brightness, base glow) and design your own: up to 8 custom animations are stored in
+  the tree and play without the computer,
+* let the tree react to music or to the computer's load,
+* choose what the tree does when plugged in, which animations the trunk pad steps through, and give the tree a name,
+* update the tree's firmware (your settings and animations are kept).
+
+The tree keeps working normally while it is connected, and remembers your last animation, style and brightness.
 
 ## Controls
 | Action | Result |

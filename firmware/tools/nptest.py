@@ -21,6 +21,7 @@
   nptest.py ton 20          boost gate on-time in us (1-20, default 20)
   nptest.py freq 40         boost frequency in kHz (5 .. 1/(t_on + 4 us), default 40)
   nptest.py touch 500       touch threshold above baseline (0 = default 500)
+  nptest.py save            save the settings now (they are saved 3 s after a change anyway)
   nptest.py clear           clear a fault
   nptest.py bootloader      reboot into the USB bootloader (minichlink does this by itself)
 """
@@ -35,14 +36,14 @@ import time
 VID, PID = 0x1209, 0xD003
 REPORT_STATUS, REPORT_COMMAND, REPORT_REBOOT = 0xAA, 0xAB, 0xFD
 CMD = dict(mode=1, hv=2, lamps=3, clear=4, ton=5, pause=6, touch=7, period=8, level=9, pwm=10, budget=11, style=12, show=13, bright=14,
-           sleep=15, autolight=16, dim=17, wave=18)
+           sleep=15, autolight=16, dim=17, wave=18, save=19)
 MODES = ["off", "auto", "manual"]
 SHOWS = ["candle", "breathe", "twinkle", "garland", "snowfall", "heartbeat", "drift", "sleep", "test", "sweep", "glow"]
 STYLES = ["normal", "retro"]
 GESTURES = ["-", "tap", "double tap", "hold (ramp)", "hold 3 s (off/on)", "triple tap", "wave"]
 FAULTS = ["none", "OVERVOLTAGE", "NO RISE (HV < 20 V for 1 s)"]
 LAMP = ["--", "L", "R", "LR"]  # lit electrodes: left (pad 1, K switch), right (pad 2, A switch)
-STATUS_FMT = "<BBBBBBBBHHHHHHHHIIBBBBBBBBBBHHBBHH"  # see struct np_status in neonpine_test.c
+STATUS_FMT = "<BBBBBBBBHHHHHHHHIIBBBBBBBBBBHHBBHHBBBBHHI"  # see struct np_status in neonpine_test.c (fw v3)
 
 
 def ioc(nr, size):
@@ -64,8 +65,16 @@ def find_device():
 def get_status(fd):
     buf = bytearray(struct.calcsize(STATUS_FMT))
     buf[0] = REPORT_STATUS
-    fcntl.ioctl(fd, ioc(0x07, len(buf)), buf)  # HIDIOCGFEATURE
+    n = fcntl.ioctl(fd, ioc(0x07, len(buf)), buf)  # HIDIOCGFEATURE
+    if n < len(buf):  # fw v2: 52 bytes, no store fields
+        buf[n:] = bytes(len(buf) - n)
     return struct.unpack(STATUS_FMT, bytes(buf))
+
+
+def show_name(n):
+    if n < len(SHOWS):
+        return SHOWS[n]
+    return "live" if n == 15 else "custom%d" % (n - 16) if 16 <= n < 24 else str(n)
 
 
 def send(fd, report_id, payload):
@@ -79,8 +88,8 @@ def command(fd, cmd, args=b""):
 
 def show(s):
     (rid, ver, mode, step, fault, flags, hv_set, period_us, hv_cv, vdd, vfb, ldr, touch, tbase, ton, duty, up, lamps, level, budget, pwm_ms, pwm_min, show, style, user_level, gesture,
-     sleep_min, flags2, ambient, reflection, lux, adapt, late, late_peak) = s
-    if show < 8:
+     sleep_min, flags2, ambient, reflection, lux, adapt, late, late_peak, caps, store_pages, n_custom, cfg_flags, store_gen, stack_free, uid) = s
+    if show < 8 or show >= 15:
         stp = "-"
     elif step == 0:
         stp = "charge"
@@ -98,13 +107,16 @@ def show(s):
     print("  light %4d   touch %5d (base %5d)%s   last gesture: %s (#%d)" % (
         ldr, touch, tbase, "  TOUCHED" if flags & 1 else "", GESTURES[gesture & 15] if (gesture & 15) < 7 else "?", gesture >> 4))
     print("  show %s   style %s   overall brightness %d/255   sleep %s   dim %s" % (
-        SHOWS[show] if show < len(SHOWS) else show, STYLES[style] if style < 2 else style, user_level,
+        show_name(show), STYLES[style] if style < 2 else style, user_level,
         "%d min" % sleep_min if flags2 & 1 else "off", "rail" if flags2 & 8 else "duty"))
     print("  light sensor %s: ambient %d (%d lx)%s, own light %d, adaptive %.2f" % (
         "on" if flags2 & 4 else "off", ambient, lux, "  OFF FOR DAYLIGHT" if flags2 & 2 else "", reflection, adapt / 255))
     print("  lamps " + lamp_txt)
     print("  brightness %3d/255   power budget %3d/255%s   PWM %d ms, min %d us   edges late <= %d us" % (
         level, budget, "  (LIMITING)" if budget < 255 else "", pwm_ms, pwm_min * 10, late))
+    if caps:
+        print("  store: %d custom animations, settings %s, gen %d   stack free %d B   uid %08x" % (
+            n_custom, "UNSAVED" if cfg_flags & 0x80 else "saved", store_gen, stack_free, uid))
 
 
 def parse_lamps(args):
@@ -147,7 +159,8 @@ def main():
         elif args[0] == "style":
             command(fd, "style", [STYLES.index(args[1])])
         elif args[0] == "show":
-            command(fd, "show", [SHOWS.index(args[1])])
+            m = re.fullmatch(r"custom(\d)", args[1])
+            command(fd, "show", [16 + int(m[1]) if m else SHOWS.index(args[1])])
         elif args[0] == "bright":
             command(fd, "bright", [int(args[1])])
         elif args[0] in ("sleep", "autolight"):
@@ -164,6 +177,8 @@ def main():
             command(fd, "touch", struct.pack("<H", int(args[1])))
         elif args[0] == "clear":
             command(fd, "clear")
+        elif args[0] == "save":
+            command(fd, "save")
         elif args[0] == "bootloader":
             try:
                 send(fd, REPORT_REBOOT, b"\x12\x34\xaa\xbb\xcc\xdd")
