@@ -1,0 +1,57 @@
+# Builds the firmware, then the NeonPine Companion for Windows and Linux with that firmware bundled.
+# The results are attached to the workflow run as artifacts.
+name: Companion app
+
+on:
+  push:
+    paths: ["companion/**", "firmware/**", ".github/workflows/companion.yml"]
+  workflow_dispatch:
+
+jobs:
+  firmware:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends make gcc-riscv64-unknown-elf libnewlib-dev
+      - name: Build
+        run: |
+          make -C firmware deps
+          make -C firmware/neonpine_test build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: firmware/neonpine_test/neonpine_test.bin
+
+  app:
+    needs: firmware
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: firmware
+          path: fw
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Qt runtime libraries (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libpulse0
+      - run: python -m pip install --upgrade pip PySide6 pyinstaller
+      - run: python companion/packaging/build.py --firmware fw/neonpine_test.bin
+      - name: Pack (Linux)
+        if: runner.os == 'Linux'
+        run: tar -C companion/dist -czf companion/dist/NeonPine-Companion-linux-x64.tar.gz NeonPine-Companion
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NeonPine-Companion-${{ runner.os }}
+          path: |
+            companion/dist/*.exe
+            companion/dist/*.tar.gz

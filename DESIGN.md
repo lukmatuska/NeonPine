@@ -2,29 +2,22 @@
 
 54.8 × 69.1 mm tree‑shaped PCB with 10 Brightmaster NEON‑3 neon lamps, powered from USB‑C 5 V.
 
-> **Branch `AC` – bipolar lamp drive (work in progress).** Each lamp now sits in an H‑bridge (§2.3), so either electrode can glow,
-> both can (alternating), or neither. The board keeps the rev B size; to make room, each lamp's switches are one
-> **MMDT5551 dual 160 V NPN (SOT‑363)** with 0603 HV pull‑ups and 0402 base resistors (one 5.4 × 6.3 mm stack per lamp),
-> the low‑voltage passives are 0402, the shift registers are DHVQFN‑16, D1/D2 moved to SOD‑123F, and the
-> lamps moved slightly (tier 1 ±4.5 mm at y 21.5, tier 2 ±8 mm at y 34, tier 3 ±5/±14 mm at y 46.3), and the board is 2 layers.
-> U2 sits in the centre of tier 3, U3 in the right wing next to lamps 9/10.
-> **Routing status (2 layers, 2026‑10‑08): fully routed** (Freerouting + scripted SOT‑363 fan‑outs + hand routing, U2 QE–QG
-> swapped by hand). 0 unconnected, 0 errors with the HVBUS/PWR pattern fixes; the hand edits (J2, U3, Q15/R55 around lamp 5)
-> live only in the board file – `tools/pcb.py` would not reproduce them.
-> The renders under `docs/img`, the `fab/` outputs, the BOM CSV and the compliance documents still describe rev B.
+> **Branches `AC` + `USB` (2026‑10‑13): routed, 0 DRC errors.** Changes since rev B:
+>
+> * **Bipolar lamp drive:** each lamp sits in an H‑bridge (§2.3), so either electrode can glow, both (alternating) or neither.
+>   Each lamp's switches are one **MMDT5551 dual 160 V NPN (SOT‑363)** with 0603 HV pull‑ups and 0402 base resistors; the
+>   low‑voltage passives are 0402, the shift registers DHVQFN‑16, D1/D2 SOD‑123F, the board 2 layers.
+> * **Low‑speed USB** with [rv003usb](https://github.com/cnlohr/rv003usb) (§2.6): J1 is a GCT **USB4105‑GF‑A** (USB 2.0, 16P).
+>   The MCU stays at 5 V; 68 Ω series resistors and 3.6 V zeners clamp its D+/D− drive. This moved several MCU pins (§2.5)
+>   and needs **NRST configured as GPIO** (PD7 = SR_DATA).
+>
+> DRC: 0 errors, 0 unconnected, 0 schematic‑parity issues, 5 silkscreen warnings (the same as before the USB work). Hand edits (J2, U3, Q15/R55,
+> the whole USB area) live only in the board file – `tools/pcb.py` / `route.py` would not reproduce them.
+> `docs/compliance/` still describes rev B. `production/` (Fabrication Toolkit, 2026‑10‑13 09:29) predates the bottom‑silkscreen
+> cleanup and the solid J1 shell pour – re‑export it before ordering; `fab/` is current.
 
-> **Branch `USB` (on top of `AC`) – low‑speed USB device in firmware ([cnlohr/rv003usb](https://github.com/cnlohr/rv003usb)).**
-> J1 is now the 16‑pin USB 2.0 receptacle **GCT USB4105‑GF‑A** (same mouth position), D+ → PC1, D− → PC2, and a 1.5 k D− pull‑up
-> R13 switched by PC4 (rv003usb `USB_PIN_DPU`, so firmware can attach and detach). rv003usb needs **V_DD ≤ 3.6 V**, so the logic now
-> runs from a **3.3 V LDO U4 (XC6206P332MR)**: MCU, both 74HC595, the light sensor and J2. The boost FET Q1 needs a 5 V gate
-> (V_GS(th) up to 3 V), so PD2 drives it through **U5 74AHCT1G125**, a 5 V buffer with TTL input thresholds; R2 moved to the
-> buffer input. The three lamp switches that were on PC1/PC2/PC4 (L4, L2, L3) moved to free U3 outputs (QC, QD, QG). Board
-> changes are applied to the hand‑routed board by `tools/usb_migrate.py` (see §5), not by `tools/pcb.py`.
-> **Routing status (2026‑10‑08): 17 connections still open** after Freerouting `--keep` (2 runs) and `fixup.py` – +3V3 (U1 VDD, U3),
-> +5V (C1→C12), GATE_DRV/GATE_BUF/GATE (U1.19 → U5 → R1 → Q1), VFB (R7/U1.20), USB_DM (J1 → U1.12), LAMP2/3/4 (to U3),
-> LAMP5, SR_CLK (U3) – to finish by hand in the pot. 0 clearance errors; 900 of the 909 kept track items are unchanged; HVBUS still B.Cu only.
 A CH32V003 MCU runs a 75–105 V boost converter and drives each lamp separately.
-Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in stand base. Unit manufacturing cost ≈ €19 / €9 / €6 at 10 / 100 / 500 pcs
+Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in stand base. Unit manufacturing cost (rev B estimate) ≈ €19 / €9 / €6 at 10 / 100 / 500 pcs
 ([manufacturing §7](docs/manufacturing.md)).
 
 | Front | Back (cover removed) |
@@ -36,8 +29,8 @@ Rev B adds a screwed‑on rear cover (with the product markings) and a slot‑in
 |---|
 | ![cover and stand](docs/img/cover-and-stand.png) |
 
-**Status (2026‑10‑06): rev B layout is complete.** It is fully routed: 0 DRC violations, 0 unconnected items, and schematic
-parity shows only cosmetic field differences. All rev A design actions that blocked market release are done in hardware (§7).
+**Status (2026‑10‑13): layout complete** (H‑bridge lamp drive + USB). Fully routed: 0 DRC errors, 0 unconnected items, 0 schematic
+parity issues. All rev A design actions that blocked market release are done in hardware (§7).
 **Still open before market release:** firmware, bench and safety verification, the EMC test campaign, supplier declarations,
 and the company details in the markings ([regulatory roadmap](docs/compliance/00-regulatory-roadmap.md)).
 
@@ -48,6 +41,7 @@ and the company details in the markings ([regulatory roadmap](docs/compliance/00
 | [docs/compliance/](docs/compliance/) | Regulatory roadmap, risk assessment, EMC test plan, materials, draft DoC / SDoC, labelling, technical file |
 | [docs/user-manual.md](docs/user-manual.md) | User instructions and safety information (draft) |
 | [docs/manufacturing.md](docs/manufacturing.md) | PCB spec, assembly incl. cover & stand, programming, end‑of‑line test, traceability |
+| [docs/mcu-netlist.md](docs/mcu-netlist.md) | Reduced netlist for firmware: MCU pin map, 74HC595 bit order, lamp drivers, peripheral setup (generated) |
 | [fab/](fab/) | Main board: Gerbers + drill, pick & place, BOM, STEP. Cover + stand: Gerbers + drill |
 
 ## 1. Concept
@@ -79,14 +73,12 @@ and the company details in the markings ([regulatory roadmap](docs/compliance/00
 
 ### 2.1 Power in
 ```
-USB‑C J1 (GCT USB4125-GF-A) VBUS ─┬─ F1 PTC 0.5 A (MF-NSMF050-2) ── VBUS_F ── FB1 600 Ω@100 MHz ──┬── +5V
+USB‑C J1 (GCT USB4105-GF-A) VBUS ─┬─ F1 PTC 0.5 A (MF-NSMF050-2) ── VBUS_F ── FB1 600 Ω@100 MHz ──┬── +5V
 CC1 ─R3 5k1─ GND, CC2 ─R4 5k1─ GND D3 SMF5.0A TVS (at the connector)              C1 10µ, C2 100n ┘
+D+ / D− → USB data network, §2.6
 ```
-* +5V feeds the boost (C3 22µ/10V), the gate buffer U5 (C12 100n) and the 3.3 V LDO U4. The ferrite and the caps form a π filter that keeps boost noise off the USB cable.
-* **+3V3** (U4 XC6206P332MR, SOT‑23, 200 mA, 1 µA I_q; C11 1 µ at its output, in the left wing next to L11) feeds U1 (C6 100n at VDD),
-  U2/U3 (C9/C10), the light sensor Q2 and the J2 programming pad. Load is a few mA. USB signalling needs the MCU at ≤ 3.6 V.
-* **USB data:** J1 D+ (A6/B6) → PC1, D− (A7/B7) → PC2, R13 1k5 from D− to PC4. CC1/CC2 keep their 5k1 pull‑downs, so a host
-  or charger still supplies 5 V. The optional 33 Ω series resistors from the rv003usb reference are left out (no room in the pot).
+* +5V feeds U1 (C6 100n at VDD) and the boost (C3 22µ/10V). The ferrite and the caps form a π filter that keeps boost noise off the USB cable.
+* The MCU runs straight from 5 V (the CH32V003 is rated 2.7–5.5 V), so the gate drive is a full 5 V.
 * The expected maximum input is about 0.1 A.
 
 ### 2.2 HV boost (the MCU is the controller)
@@ -94,12 +86,11 @@ CC1 ─R3 5k1─ GND, CC2 ─R4 5k1─ GND D3 SMF5.0A TVS (at the connector)    
 +5V ── L11 330µH ──SW──┬── D1 200 V fast ────┬──────────┬──────────┬── HV+ (75–105 V)
                        │   (R12 100Ω + C8    C4 1µ/250V D2 SMF100A  R5 1M ─ R6 1M ─┬─ VFB → PD3 (ADC A4)
                   Q1 DMN15H310SE  100p snubber, (1210)   (clamp)                 R7 39k ║ C5 10n
-PD2 ─┬─ U5 74AHCT1G125 (+5V) ─R1 47Ω─ G   (150 V, 330 mΩ @ 5 V)  DNP)  │      │                   │
-     R2 100k to GND                                                       GND    GND                 GND
+PD6 ─R1 47Ω─ G    (150 V, 330 mΩ @ 5 V)  DNP)  │          │                       │
+          R2 100k to GND                     GND        GND                     GND
 ```
-* **Q1 DMN15H310SE:** 150 V, R_DS(on) 330 mΩ at V_GS = 5 V. V_GS(th) is 1–3 V, so the 3.3 V MCU cannot drive it directly: **U5 74AHCT1G125**
-  (5 V supply, V_IH 2.0 V, /OE tied low, SC‑70‑5) buffers PD2 to a full 5 V gate swing. **R2 is required**: it now holds the buffer input
-  low, which keeps the boost off during reset and programming.
+* **Gate drive:** PD6 = TIM2_CH3 with the TIM2 full remap (AFIO TIM2_RM = 11); PD2, the old TIM1_CH1 pin, is USB D+ now.
+* **Q1 DMN15H310SE:** 150 V, R_DS(on) 330 mΩ at V_GS = 5 V. **R2 is required**: it keeps the boost off during reset and programming.
   D2 (SMF100A, SOD‑123F, 200 W) clamps HV+ at V_BR 111–123 V, below Q1’s 150 V.
 * **R12/C8:** an RC snubber across Q1, not fitted by default (DNP). Fit it if pre‑compliance shows SW‑node ringing at 30–100 MHz.
 * **L11:** 330 µH shielded 6 × 6 × 2.8 mm (SWPA6028S331MT, **verify I_sat ≥ 0.4 A** on the datasheet).
@@ -158,53 +149,72 @@ PD2 ─┬─ U5 74AHCT1G125 (+5V) ─R1 47Ω─ G   (150 V, 330 mΩ @ 5 V)  DNP
 | Input | HW | Use |
 |---|---|---|
 | **TP2 trunk touch pad** (front, Ø4 mm, **covered by solder mask**) | R11 1 k to PA2 (TKEY) | tap: next animation · hold: brightness ramp · double‑tap: sleep timer · hold 3 s: off/on |
-| **Light sensor** Q2 TEPT4400 (Vishay, Cd‑free NPN phototransistor, front left wing) | +3V3 → C, E → PD5, R9 22k to GND | auto on at dusk / off in daylight, room‑adaptive brightness, wave‑to‑switch. 20 lx → 0.3–1.5 V; saturates at ≈ 3.2 V from about 75 lx (was 4.4 V at 100 lx on 5 V) |
-| **TP3** (back pad) | PA1 | spare / test point |
+| **Light sensor** Q2 TEPT4400 (Vishay, Cd‑free NPN phototransistor, front left wing) | +5V → C, E → PA1 (ADC A1), R9 22k to GND | auto on at dusk / off in daylight, room‑adaptive brightness, wave‑to‑switch. 20 lx → 0.3–1.5 V, 100 lx → about 4.4 V |
+| **TP3** (back pad) | SR_CLK (PC7) | test point for the shift‑register clock |
 
 Rev B removed the star touch pad TP1 and its resistor R10, and replaced the CdS LDR (GL5528, contains cadmium) with the TEPT4400.
 **Wave‑to‑switch:** the light sensor is read in the BAM slot where all lamps are dark and again in a lit slot; the difference is the tree's own
 light reflected off a hand.
 
 ### 2.5 MCU pin map – CH32V003F4P6 (TSSOP‑20)
+Full pin / net / bit tables for the firmware: [docs/mcu-netlist.md](docs/mcu-netlist.md) (generated by `tools/mcu_netlist.py`).
+
 | Pin (port) | Function |
 |---|---|
-| 10, 13, 15–17 (PC0, PC3, PC5–PC7) | Cathode‑side switches of lamps **L7, L5, L9, L6, L10** |
-| 11 / 12 (PC1 / PC2) | **USB D+ / D−** (rv003usb `USB_PORT C`, `USB_PIN_DP 1`, `USB_PIN_DM 2`) |
-| 14 (PC4) | **USB D− pull‑up** via R13 1k5 (`USB_PIN_DPU 4`) |
+| 10–16 (PC0–PC6) | Cathode‑side switches of lamps **L7, L4, L2, L5, L3, L9, L6** |
 | 8 (PD0) | Cathode‑side switch of **L8** |
-| 3 (PD6) / 5 (PA1) / 1 (PD4) | **SR_DATA / SR_CLK / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK) |
-| 19 (PD2) | TIM1_CH1 → boost gate (via U5 and R1) |
+| 19 (PD2) / 1 (PD4) | **USB D+ / D−** (rv003usb, through R13 / R14 68 Ω; D− = EXTI4) |
+| 4 (PD7) / 17 (PC7) / 2 (PD5) | **SR_DATA / SR_CLK / SR_LATCH** to the 74HC595 chain U2 → U3 (TP3 sits on SR_CLK). **PD7 is the NRST pin: program NRST as GPIO** (`minichlink -D`) |
+| 3 (PD6) | TIM2_CH3 (TIM2 full remap) → boost gate (via R1) |
 | 20 (PD3) | A4 – HV feedback |
-| 2 (PD5) | A5 – light sensor |
+| 5 (PA1) | A1 – light sensor |
 | 6 (PA2) | A0 – TP2 trunk touch |
-| 18 (PD1) | SWIO, on pogo pads J2 (**3V3** / SWIO / GND), back side |
-| 4 (PD7) | NRST (C7 100n to GND) |
+| 18 (PD1) | SWIO, on pogo pads J2 (5V / SWIO / GND), back side |
 
-**Shift registers (2 × 74HC595BQ at 3.3 V, DHVQFN‑16 2.5 × 3.5 mm; exposed pad = GND (footprint `NeonPine:DHVQFN-16-…_EPGND`, EP numbered 8)):** U2 QA–QH = L8A, L7A, L4A, L2A, L1A, **L1 (cathode side)**, L5A, L3A;
-U3 QC = **L4**, QD = **L2**, QE = L10A, QF = L9A, QG = **L3**, QH = L6A (cathode sides in bold; QA, QB unused). /OE is tied low and /SRCLR high: the outputs are random until the first latch,
-which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit shift + latch per BAM slot
-(8 slots per ≈ 1 ms frame) is a few µs of CPU time.
+If NRST is left enabled, PD7 cannot drive SR_DATA (the 595s then shift in ones and the lamps light wrongly), but nothing unsafe happens.
 
-The lamp‑to‑pin order (MCU pins and shift‑register outputs) comes from `tools/pinswap.py` (stored in `tools/lamp_pins.json`).
+**Shift registers (2 × 74HC595BQ, DHVQFN‑16 2.5 × 3.5 mm; exposed pad = GND (footprint `NeonPine:DHVQFN-16-…_EPGND`, EP numbered 8)):** U2 QA–QH = L8A, L7A, L4A, L2A, L1A, **L1 (cathode side)**, L5A, L3A;
+U3 QD = L10A, QE = **L10 (cathode side)**, QF = L9A, QH = L6A (QA–QC, QG unused). /OE is tied low and /SRCLR high: the outputs are
+random until the first latch, which is harmless because the boost is held off by R2 until the firmware runs. One 16‑bit shift +
+latch per BAM slot (8 slots per ≈ 1 ms frame) is a few µs of CPU time.
+
+The lamp‑to‑pin order (MCU pins and shift‑register outputs) comes from `tools/pinswap.py` (stored in `tools/lamp_pins.json`); the
+USB rework moved L10's cathode switch to U3 QE and L10A to U3 QD by hand (rerunning `pinswap.py` would undo that).
 **The firmware maps lamp index → port bit through a table.**
 
+### 2.6 USB (low speed, rv003usb)
+```
+PD2 ─ R13 68Ω ─┬─ D+ (J1 A6/B6)          VBUS ─ R15 1k5 ─┐
+               D4 BZX884-C3V6 ─ GND                       │
+PD4 ─ R14 68Ω ─┴─ D− (J1 A7/B7) ──────────────────────────┴─ D5 BZX884-C3V6 ─ GND
+```
+* **Why the MCU can stay at 5 V** (full gate drive for Q1, no LDO, no level shifter): at VDD = 5 V the CH32V003's V_IH is
+  0.22·(VDD − 2.7) + 1.55 = 2.06 V, so it reads the 3.3 V bus directly. When it transmits, its 5 V push‑pull output is clamped
+  by the 68 Ω + 3.6 V zener pair (≈ 20 mA peak per line for the length of a packet).
+* **D− pull‑up** R15 1k5 to VBUS → low‑speed device, **always on the bus**; D5 clamps the idle level. While plugged in it draws
+  ≈ 1 mA through D5. To re‑enumerate (bootloader → application), drive D− low for a few ms.
+* **rv003usb `usb_config.h`:** `USB_PORT D`, `USB_PIN_DP 2`, `USB_PIN_DM 4`, no `USB_PIN_DPU`. Needs HSI × 2 = 48 MHz.
+* **Layout:** J1 = GCT USB4105‑GF‑A (LCSC C3020560). Its shell front sits 1.64 mm past the board edge (x 119.6, 1.2 mm further
+  out than GCT's PCB‑edge line), and the right pot‑rim lip above it is cut back to x 119.4 (`outline()`; the rear cover keeps the
+  earlier, smaller notch, which only cuts the lip below y 97 and has no effect on the cable): the
+  plug body of a cable (≤ 12.35 mm wide, reaching up to 1.6 mm forward of the back face) must not hit the board in front of the
+  mouth – now clear for plug bodies up to 12.5 mm wide. R13/R14 under U1's pin‑1 corner,
+  D4/D5, R15 and the CC resistors R3/R4 in a row below J1. Its shell pads are poured solid. The library land pattern puts
+  J1's A1/B12/A12/B1 pads 0.19 mm from its own NPTH pegs – a J1‑only rule in `NeonPine.kicad_dru` allows that.
+
+
 ## 3. Firmware architecture (ch32v003fun or WCH SDK) – *not written yet*
-* **USB (rv003usb, low speed, HID):** `usb_config.h` → `USB_PORT C`, `USB_PIN_DP 1`, `USB_PIN_DM 2`, `USB_PIN_DPU 4`
-  (the same pins as rv003usb's CH32V003J4M6 configuration). Uses: firmware update through the rv003usb bootloader (flash it once over SWD;
-  pick a boot mode, e.g. "stay in the bootloader only if a USB host is seen at power‑up", so a plain charger starts the lamp at once), and an optional
-  HID control channel (mode, brightness, test mode). Firmware constraints that come with it:
-  * the D− pin‑change interrupt (EXTI2) must be the highest priority and never preempted; other ISRs keep critical sections ≲ 40 cycles,
-    or enable preemption (so the BAM timer ISR must be preemptible by EXTI);
-  * lamp writes to port C **must use BSHR/BCR**, never a full `OUTDR` write, or they would clobber D+/D−/DPU (5 lamps remain on port C, L8 on PD0,
-    L2/L3/L4 cathode sides in the shift‑register frame);
-  * the HSI is trimmed from the USB SOF ticks while on a host; on a charger it runs untrimmed (fine for the boost and BAM).
-* **Clock:** 48 MHz from HSI × 2. TIM1 runs 30 kHz PWM with **±5 % frequency dithering** (EMC measure E2).
+* **Clock:** 48 MHz from HSI × 2 (also required by rv003usb). **TIM2_CH3** (PD6, TIM2 full remap) runs the 30 kHz boost PWM
+  with **±5 % frequency dithering** (EMC measure E2).
+* **Option bytes:** NRST disabled (PD7 = SR_DATA). If the rv003usb bootloader is used, keep RST_MODE = GPIO when configuring it.
+* **USB:** rv003usb (HID, no driver needed); optional rv003usb bootloader for firmware updates over USB. Its EXTI4 (D−)
+  interrupt must have the highest priority and must never be preempted: keep other ISRs short (≈ 40 cycles) or preemptible.
 * **Boost loop:** a 1 kHz PI loop driven by the ADC, ramping at most 2 V/ms; the setpoint is the global brightness, 75–105 V.
   When everything is dark: PWM off and MCU standby.
-* **Lamp PWM:** 8‑bit bit‑angle modulation from TIM2 with an ≈ 1 kHz frame and gamma correction.
+* **Lamp PWM:** 8‑bit bit‑angle modulation from TIM1 with an ≈ 1 kHz frame and gamma correction.
 * **Animation engine:** each mode is a `frame(t) → uint8_t lvl[10]` function, and modes crossfade over 1.5 s.
 * **Single‑pad UI on TP2:** tap / hold / double‑tap / long hold.
-* **Compliance hooks:** an EMC worst‑case mode (all lamps on, 105 V), a production self‑test mode, and the firmware version readable over SWD.
+* **Compliance hooks:** an EMC worst‑case mode (all lamps on, 105 V), a production self‑test mode, and the firmware version readable over SWD and USB.
 
 | # | Mode | Idea |
 |---|---|---|
@@ -217,15 +227,12 @@ The lamp‑to‑pin order (MCU pins and shift‑register outputs) comes from `to
 | 7 | Drift | auto‑cycles 1–6 every 3 min |
 | 8 | Sleep | dims over 20 min, then off |
 
-## 4. BOM (rev B, approx. LCSC prices)
+## 4. BOM (approx. LCSC prices; total last checked for rev B)
 Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 
 | Ref | Part | Qty | ≈ $ |
 |---|---|---|---|
 | U1 | CH32V003F4P6 | 1 | 0.13 |
-| U4 / C11 | XC6206P332MR 3.3 V LDO (SOT‑23) / 1 µ 0402 | 1+1 | ≈ 0.03 *(check)* |
-| U5 / C12 | 74AHCT1G125 (SC‑70‑5) gate buffer / 100n 0402 | 1+1 | ≈ 0.05 *(check)* |
-| R13 | 1k5 0402 (USB D− pull‑up) | 1 | 0.001 |
 | LA1–LA10 | Brightmaster NEON‑3 (TME) | 10 | *TME price* |
 | Q11–Q20 | MMDT5551 (dual NPN, SOT‑363) | 10 | ≈ 0.20 *(check)* |
 | U2, U3 | 74HC595BQ (DHVQFN‑16) | 2 | ≈ 0.10 *(check)* |
@@ -235,16 +242,17 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 | D1 / D2 / D3 | 200 V 1 A fast diode, SOD‑123F *(pick P/N)* / SMF100A / SMF5.0A | 1+1+1 | 0.07 |
 | C4 | 1 µF 250 V X7R 1210 | 1 | 0.06 |
 | R21–R40 / R41–R60 | 150k 0603 HV (≥ 200 V) / 22k 0402 | 20+20 | ≈ 0.15 *(check HV part)* |
-| other R | 0402 (47, 100k, 5k1 ×2, 39k, 22k, 1k); R5/R6 1M stay 0603 (≈ 52 V across each, 0402 is rated 50 V) | 9 | 0.02 |
-| C1–C7, C9, C10 | 0402: 100n ×5, 10n · 0603: C1 10µ · 0805: C3 22µ/10V · 1210: C4 1µ/250V (bulk caps kept larger for DC‑bias derating) | 9 | 0.05 |
+| other R | 0402 (47, 100k, 5k1 ×2, 39k, 22k, 1k, 68 ×2, 1k5); R5/R6 1M stay 0603 (≈ 52 V across each, 0402 is rated 50 V) | 12 | 0.02 |
+| D4, D5 | BZX884‑C3V6 3.6 V zener, SOD‑882 (LCSC C7529010) | 2 | 0.02 |
+| C1–C6, C9, C10 | 0402: 100n ×4, 10n · 0603: C1 10µ · 0805: C3 22µ/10V · 1210: C4 1µ/250V (bulk caps kept larger for DC‑bias derating) | 8 | 0.05 |
 | FB1 | 600 Ω @ 100 MHz 0603 | 1 | 0.01 |
-| J1 / F1 | **USB4105‑GF‑A** (16‑pin USB 2.0) / MF‑NSMF050‑2 | 1+1 | 0.15 *(check J1 price)* |
+| J1 / F1 | USB4105‑GF‑A (USB 2.0, LCSC C3020560) / MF‑NSMF050‑2 | 1+1 | *check* |
 | mech | rear cover + stand PCB, 3 × M2 × 5 standoff, 6 × M2 × 4 screw | – | *PCB price* + 0.10 |
-| | **Total excl. lamps and PCBs** (live LCSC prices 2026‑10‑06) | | **$3.17 / $2.47 / $2.15** at 10 / 100 / 500 units |
+| | **Total excl. lamps and PCBs** (rev B, live LCSC prices 2026‑10‑06; **re‑quote** for the H‑bridge + USB BOM) | | **$3.17 / $2.47 / $2.15** at 10 / 100 / 500 units |
 
 ## 5. PCB & layout
 * **Board:** **2 layers** (F.Cu / B.Cu = all SMD parts; was 4 layers, reduced for cost), FR‑4 1.6 mm, 54.8 × 69.1 mm incl. stand tabs (`SC` in `tools/pcb.py` can scale the whole tree if needed). The HV supply (HVBUS) runs on B.Cu only, never as a track on F.Cu.
-  **Safety note for the risk assessment:** unlike rev B, HVBUS now has through‑vias. Their plated barrels end at the front surface, tented under solder mask (no F.Cu track, 0.5 mm to the front GND pour). Solder mask is not rated insulation, so the front is no longer free of unlimited‑HV copper; check this against the touch/creepage argument in the risk assessment, or use blind B.Cu–In2 vias if the fab offers them.
+  Verified 2026‑10‑13: **0 HVBUS vias and 0 HVBUS tracks on F.Cu**, so the front carries no unlimited‑HV copper.
   GND pour on F.Cu and B.Cu (SMD pads solid, THT pads with
   thermal spokes, USB shell solid); all vias tented.
 * **Netclasses** (`tools/pcb.py` writes them to `NeonPine.kicad_pro`):
@@ -253,13 +261,13 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
   |---|---|---|---|---|---|
   | **HVBUS** | HV+, SW, snubber node Net-(C8-Pad1) (unlimited 105 V source) | 0.3 mm | **0.5 mm** | – | **B.Cu only** (enforced in `route.py`, verified: 0 items on the front) |
   | HV | lamp anode / cathode nets, FB_MID (current‑limited through ≥ 150 k) | 0.3 mm | 0.5 mm | 0.7/0.35 | both |
+  | PWR | VBUS, VBUS_F, +5V, GND | 0.4 mm | 0.15 mm | 0.7/0.35 | both |
+  | Default | everything else (USB data included) | 0.2 mm (0.15 min) | 0.15 mm | 0.6/0.3 | both |
 
   `NeonPine.kicad_dru` relaxes the clearance to 0.2 mm **inside the courtyards of Q11–Q20 only**: the SOT‑363 itself puts
   its collector pins 0.3 mm from base/emitter. Freerouting does not read custom rules, so expect to hand‑route the
-  collector/base fan‑outs (or let Freerouting route the rest and finish these by hand).
-  | PWR | VBUS, VBUS_F, +5V, GND | 0.4 mm | 0.15 mm | 0.7/0.35 | both |
-  | Default | … incl. **+3V3** (a few mA) and USB D+/D− (low speed, 1.5 Mbit/s: no impedance control needed) | 0.15 mm | 0.15 mm | 0.6/0.3 | both |
-  | Default | everything else | 0.15 mm | 0.15 mm | 0.6/0.3 | both |
+  collector/base fan‑outs (or let Freerouting route the rest and finish these by hand). A second rule lets J1's own pads sit
+  0.19 mm from its NPTH alignment pegs (§2.6).
 
 * **Placement:**
   * Fixed by hand: the lamps and their R/R/Q stacks, J1, U1, Q1, L11, the input protection D3/F1 (right above USB‑C),
@@ -268,6 +276,8 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
   * Results: D1 3.2 mm from Q1's drain tab, D1–C4 3.2 mm, C6 at U1 VDD 2.2 mm, the TVS 5.7 mm from VBUS.
 * **Routing:** Freerouting **2.4.1** (`tools/route.py`; version 2.1.0 writes incomplete sessions). Freerouting leaves the last
   2–3 tight connections open; `tools/fixup.py` closes them with short legal links checked by KiCad's own collision test.
+  The USB area (J1, U1 surroundings) was re‑placed by `tools/usb_rework.py` and routed by hand; `tools/route_local.py` runs
+  Freerouting on selected nets only, with every other track locked.
 * **Design flow:**
   1. `tools/gen.py` writes the schematic, then `tools/sch_boost.py` redraws the boost section with real wires.
   2. `kicad-cli sch export netlist -o np.net NeonPine.kicad_sch` produces the netlist.
@@ -277,18 +287,13 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
   6. `tools/fixup.py` closes the remaining links; then run DRC.
   7. `tools/cover.py` writes the cover and stand board.
   8. 3D models come from `tools/lamp3d.py` and `tools/inductor3d.py` (FreeCAD).
-* **USB branch flow (the board is hand‑finished, so it is updated in place instead of rebuilt):**
-  1. `tools/gen.py` + `tools/sch_boost.py`, then `kicad-cli sch export netlist -o np.net NeonPine.kicad_sch`.
-  2. `tools/usb_migrate.py np.net`: swaps J1 for the USB4105 (mouth on the same edge), places U4/U5/R13 at fixed spots and C11/C12/C5 at
-     the nearest free spot, nudges C7/R3/R4 out of the wider J1 courtyard, updates every pad net, rips up the nets whose pads changed,
-     cuts other‑net copper under the new pads and trims dangling stubs. Everything else keeps its routing.
-  3. `tools/route.py <freerouting-2.4.1.jar> 40 --keep --lock` (the new `--lock` exports the existing copper as fixed), then `tools/fixup.py` and DRC.
-  * `NeonPine.kicad_dru` gained a rule for J1: the library USB4105 footprint puts its GND pads 0.19 mm from its own NPTH pegs.
+  9. `tools/docs.py` regenerates the schematic PDF, the renders, the firmware netlist (`tools/mcu_netlist.py`), the `fab/`
+     outputs and the PDFs of the Markdown documents (compliance excluded).
 
 ## 6. Ratings (to be confirmed by measurement)
 | Parameter | Value |
 |---|---|
-| Input | 5 V ⎓ via USB‑C, ≤ 0.15 A (expected ≈ 0.1 A max, standby < 1 mA) |
+| Input | 5 V ⎓ via USB‑C, ≤ 0.15 A (expected ≈ 0.1 A max, standby ≈ 2 mA incl. ≈ 1 mA in the USB D− pull‑up) |
 | Internal voltage | 75–105 V DC, ≤ 123 V under fault (D2 clamp), only on the back under the cover |
 | Environment | indoor, dry, 0–35 °C, IP20 |
 | Light output | ≪ 60 lm (outside the scope of Ecodesign Reg. (EU) 2019/2020) |
@@ -304,7 +309,8 @@ Full list: [fab/NeonPine-bom.csv](fab/NeonPine-bom.csv). R12 and C8 are DNP.
 | 5 | Product markings | **done on the cover silkscreen** – fill in company, address and country; the S/N field takes a printed label |
 | 6 | Lamp retention (silicone dab) | process step in `docs/manufacturing.md` |
 | 7 | ESD: masked touch pad, TVS on VBUS | **done** (TP2 masked, D3 SMF5.0A); star touch pad removed |
-| 8 | Part numbers for L11, F1, J1 | **chosen** (SWPA6028S331MT, MF‑NSMF050‑2, USB4125‑GF‑A) – confirm L11 I_sat |
+| 8 | Part numbers for L11, F1, J1 | **chosen** (SWPA6028S331MT, MF‑NSMF050‑2, USB4105‑GF‑A) – confirm L11 I_sat |
+| 8b | USB: enumeration on Windows / macOS / Linux hosts, D+/D− levels with the zener clamps, EMC with a data cable | open (bench) |
 | 9 | Stand | **done** – tabs + base plate (cover/stand board) |
 | 10 | Bench verification: D2 clamp vs Q1, C4 discharge, input current, temperature rise, touch current | open (risk assessment §5) |
 | 12 | Price check findings: L11 → SWPA6045S331MT (the 6028 is rated only 300 mA and out of stock), C4 → 1812 footprint (no 1 µF/250 V in 1210), Q1 low stock → CJT04N15 alternative | open – see [manufacturing §7.3](docs/manufacturing.md) |

@@ -1,0 +1,11 @@
+# NeonPine: user access to the board and the programmer (members of plugdev).
+# sudo cp 99-neonpine.rules /etc/udev/rules.d/ && sudo udevadm control --reload && sudo udevadm trigger
+
+# rv003usb bootloader (1209:B003) and the test firmware (1209:D003)
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="b003", GROUP="plugdev", MODE="0660"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="1209", ATTRS{idProduct}=="d003", GROUP="plugdev", MODE="0660"
+
+# WCH-LinkE (RISC-V mode, ARM mode, IAP mode)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="8010", GROUP="plugdev", MODE="0660"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="8012", GROUP="plugdev", MODE="0660"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="4348", ATTRS{idProduct}=="55e0", GROUP="plugdev", MODE="0660"

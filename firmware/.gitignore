@@ -1,0 +1,8 @@
+deps/
+*.elf
+*.bin
+*.hex
+*.lst
+*.map
+__pycache__/
+bootloader_image.h
