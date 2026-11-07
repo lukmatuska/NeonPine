@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (QButtonGroup, QComboBox, QHBoxLayout, QProgressBa
                                QVBoxLayout, QWidget)
 
 from .mirror import Mirror
-from .visualizers import HAVE_AUDIO, CpuSource, LiveDriver, MusicSource
+from .visualizers import CpuSource, LiveDriver, MusicSource
 from .widgets import TreeView, card, hstretch, label
 
 OWNER = "Live page"
@@ -23,7 +23,7 @@ class LivePage(QWidget):
     def __init__(self, ctx):
         super().__init__()
         self.ctx = ctx
-        self.music = MusicSource(self) if HAVE_AUDIO else None
+        self.music = MusicSource(self)
         self.cpu = CpuSource()
         self.paint = PaintSource()
         self.driver = LiveDriver(self)
@@ -73,36 +73,35 @@ class LivePage(QWidget):
         mus = QWidget()
         ml = QVBoxLayout(mus)
         ml.setContentsMargins(0, 6, 0, 0)
-        if self.music:
-            ml.addWidget(label("Input", muted=True))
-            self.inputs = QComboBox()
-            for name, dev in MusicSource.inputs():
-                self.inputs.addItem(name, dev)
-            self.inputs.currentIndexChanged.connect(lambda _: self._source(self.group.checkedId()))
-            ml.addWidget(self.inputs)
-            ml.addWidget(label("Style", muted=True))
-            self.style = QComboBox()
-            self.style.addItem("Spectrum – bass at the bottom, treble at the star", "bands")
-            self.style.addItem("Level meter – fills up from the bottom", "meter")
-            self.style.addItem("Beat – the whole tree pulses", "pulse")
-            self.style.currentIndexChanged.connect(lambda _: setattr(self.music, "style", self.style.currentData()))
-            ml.addWidget(self.style)
-            ml.addWidget(label("Sensitivity", muted=True))
-            self.gain = QSlider(Qt.Horizontal)
-            self.gain.setRange(-20, 30)
-            self.gain.setValue(0)
-            self.gain.valueChanged.connect(lambda v: setattr(self.music, "gain", 10 ** (v / 20)))
-            ml.addWidget(self.gain)
-            self.meter = QProgressBar()
-            self.meter.setRange(0, 100)
-            self.meter.setTextVisible(False)
-            self.meter.setFixedHeight(8)
-            self.music.level.connect(lambda v: self.meter.setValue(int(min(1.0, v) * 100)))
-            ml.addWidget(self.meter)
-            ml.addWidget(label("Tip: to react to what the PC plays, pick a monitor / loopback input "
-                               "(Linux: “Monitor of …”, Windows: enable “Stereo Mix”).", muted=True, wrap=True))
-        else:
-            ml.addWidget(label("Music needs Qt Multimedia, which this installation doesn't have.", muted=True, wrap=True))
+        ml.addWidget(label("Input", muted=True))
+        self.inputs = QComboBox()
+        self.inputs.setToolTip("“What's playing” follows the computer's sound output; the others are inputs such as a "
+                               "microphone or line in")
+        refresh = QPushButton("Refresh")
+        refresh.setToolTip("Look for audio devices again")
+        refresh.clicked.connect(self._fill_inputs)
+        ml.addWidget(hstretch(self.inputs, refresh))
+        self._fill_inputs()
+        self.inputs.currentIndexChanged.connect(lambda _: self._source(self.group.checkedId()))
+        ml.addWidget(label("Style", muted=True))
+        self.style = QComboBox()
+        self.style.addItem("Spectrum – bass at the bottom, treble at the star", "bands")
+        self.style.addItem("Level meter – fills up from the bottom", "meter")
+        self.style.addItem("Beat – the whole tree pulses", "pulse")
+        self.style.currentIndexChanged.connect(lambda _: setattr(self.music, "style", self.style.currentData()))
+        ml.addWidget(self.style)
+        ml.addWidget(label("Sensitivity", muted=True))
+        self.gain = QSlider(Qt.Horizontal)
+        self.gain.setRange(-20, 30)
+        self.gain.setValue(0)
+        self.gain.valueChanged.connect(lambda v: setattr(self.music, "gain", 10 ** (v / 20)))
+        ml.addWidget(self.gain)
+        self.meter = QProgressBar()
+        self.meter.setRange(0, 100)
+        self.meter.setTextVisible(False)
+        self.meter.setFixedHeight(8)
+        self.music.level.connect(lambda v: self.meter.setValue(int(min(1.0, v) * 100)))
+        ml.addWidget(self.meter)
         ml.addStretch(1)
         self.opts.addWidget(mus)
 
@@ -142,14 +141,27 @@ class LivePage(QWidget):
         ctx.connectionChanged.connect(lambda ok: self._update_state())
         self._update_state()
 
+    def _fill_inputs(self):
+        keep = self.inputs.currentText()
+        self.inputs.blockSignals(True)
+        self.inputs.clear()
+        for name, spec in MusicSource.inputs():
+            self.inputs.addItem(name, spec)
+        if not self.inputs.count():
+            self.inputs.addItem("No audio device found", None)
+        k = self.inputs.findText(keep)
+        self.inputs.setCurrentIndex(max(0, k))
+        self.inputs.blockSignals(False)
+        if keep and self.inputs.currentText() != keep and self.group.checkedId() == 1:
+            self._source(1)
+
     def _source(self, i):
-        if self.music:
-            self.music.stop()
+        self.music.stop()
         self.opts.setCurrentIndex(i)
         src = None
-        if i == 1 and self.music:
+        if i == 1:
             try:
-                self.music.start(self.inputs.currentData() if self.inputs.count() else None)
+                self.music.start(self.inputs.currentData())
                 src = self.music
             except RuntimeError as e:
                 self.ctx.message.emit(str(e), "error")

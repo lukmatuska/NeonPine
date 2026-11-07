@@ -12,7 +12,7 @@ The tree needs no driver on Windows; on Linux it needs a udev rule.
 | **Tree** | Shows the tree as it glows right now: the firmware's own animation code runs on the tree's clock. Includes on/off, brightness, retro flicker, the sleep timer, and every animation (built-in and custom) as a live thumbnail. Click the touch pad in the picture to go to the next animation. |
 | **Animations › My animations** | Keyframe editor. Paint the 20 electrodes (16 levels each) on the tree picture, arrange keys on a timeline with durations (≤ 16 s) and transitions (hold / linear / smooth), with undo/redo. Play it back in the app or **live on the tree** while you paint. Start from 8 patterns (chase, rise, rain, sweep, ping-pong, pulse, sparkle, star) or sampled from a built-in animation. Import/export JSON. **Upload to tree** stores up to 8 animations (952 bytes) in the tree's flash; they then play without the PC and are reachable by tap. |
 | **Animations › Built-in tuning** | Speed (×⅛…×4), brightness and base glow of Candle, Breathe, Twinkle, Garland, Snowfall and Heartbeat, with a live preview. Changes are applied to the tree immediately and saved there. |
-| **Live** | Drives the tree from the PC: **music** (microphone / line-in / loopback: spectrum, level meter or beat), **CPU load**, or **paint** by hand. The tree returns to its animation 2.5 s after the stream stops. |
+| **Live** | Drives the tree from the PC: **music** (what the computer is playing, or a microphone / line in: spectrum, level meter or beat), **CPU load**, or **paint** by hand. The tree returns to its animation 2.5 s after the stream stops. |
 | **Tree settings** | Name, what to play after plugging in (last state, or a fixed animation/style/brightness), which animations tap and wave step through, the drift list and its timing, crossfade time, sleep timer length, light sensor, dimming mode. Also backup/restore of settings and animations to a file, and factory settings. |
 | **Diagnostics** | HV rail, boost, power budget, touch pad (raw vs. threshold), light sensor, PWM timing, supply, free RAM, faults (with *clear*). Under *Advanced*: HV setpoint, touch threshold, budget limiter, bring-up shows. |
 | **Firmware** | Updates the tree with the firmware bundled with the app (or a `.bin` file): it reboots into the USB bootloader, then erases, writes, verifies and starts the image (~10 s). Settings and custom animations survive. *Recovery* catches the bootloader's 5 s window if the tree no longer shows up. |
@@ -65,10 +65,11 @@ to the workflow run.
 | `builtin.py` | The firmware's animations ported 1:1 (same Q12 integer math and tables), so previews match the tree |
 | `mirror.py` | Renders what the tree is showing from its status (crossfades, drift, custom, live, brightness) |
 | `flasher.py` | Firmware updates: a Python port of minichlink's b003boot programmer (ch32fun, MIT) |
+| `audio_capture.py` | Audio for the music visualizer: PulseAudio/PipeWire through libpulse (lists monitors, which Qt hides) and WASAPI loopback on Windows, both via ctypes; Qt Multimedia otherwise |
 | `worker.py` | USB on its own thread: connect/reconnect, polling, jobs, live streaming, flashing |
 | `app.py` | Window, tray, single instance, schedule; `pages_*.py` are the pages, `widgets.py` the theme and the tree drawing |
 
 The protocol is documented in `../firmware/README.md` (USB protocol) and at the top of `device.py`.
 
-Untested so far: the Windows HID backend and Windows builds (written against the Win32 API, not run yet) and macOS
+Untested so far: the Windows HID backend, WASAPI loopback capture and Windows builds (written against the Win32 API, not run yet) and macOS
 (it should work through `pip install hidapi`).
