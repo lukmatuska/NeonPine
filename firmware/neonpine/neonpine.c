@@ -19,12 +19,12 @@
 //   sleep; 1.5 s crossfades) plus the bring-up test sequence, a brightness sweep and a steady glow.
 // * Brightness: the simulator dims with the HV rail (75-105 V). With PWM every window has to strike
 //   anew, which needs up to 90 V, so by default the same 1/3 .. 1 range is applied to the duty instead
-//   and HV stays at 100 V. Rail dimming is selectable (nptest.py dim rail) to try.
+//   and HV stays at 100 V. Rail dimming is selectable (npctl.py dim rail) to try.
 // * TP2 touch (DESIGN.md §2.4): tap = next animation, double tap = sleep timer (dims over 20 min, then
 //   off), triple tap = style, hold = brightness ramp, hold 3 s = off / on.
 // * Light sensor (TEPT4400 on PA1): read in a 0.5 ms all-dark slot every 100 ms, so the tree's own light
 //   doesn't count. Off in daylight, on at dusk, room-adaptive brightness, wave a hand = next animation.
-// * USB HID 1209:D003 with feature reports: 0xAA status, 0xAB commands (../tools/nptest.py), 0xAC live
+// * USB HID 1209:D003 with feature reports: 0xAA status, 0xAB commands (../tools/npctl.py), 0xAC live
 //   frames and 0xAE store pages (../../companion). minichlink reboots it into the rv003usb bootloader
 //   by itself (report 0xFD) before flashing.
 // * Store (last 1 kB of flash, anim.h): page 0 = settings (power-up animation / style / brightness,
@@ -43,7 +43,7 @@
 #define Q 4096  // Q12 fixed point: 1.0
 
 // ---- Boost -------------------------------------------------------------------------------------
-#define BOOST_PERIOD      1200     // TIM2 ticks at 48 MHz -> 40 kHz (default, nptest.py freq changes it)
+#define BOOST_PERIOD      1200     // TIM2 ticks at 48 MHz -> 40 kHz (default, npctl.py freq changes it)
 #define PERIOD_MAX        9600     // 5 kHz
 #define PERIOD_MARGIN     192      // >= 4 us off-time per period: L11 must empty (DCM) before the next pulse
 #define TON_DEFAULT       960      // gate on-time, ticks: 20 us -> I_pk 0.30 A (L11 CR5040-331M: 400 mA)
@@ -167,7 +167,7 @@ enum { GESTURE_TAP = 1, GESTURE_DOUBLE = 2, GESTURE_HOLD = 3, GESTURE_LONG = 4, 
 #define GUARD_JOB_US         100
 #define MS_TASK_MAX_DELAY_US 1000  // the 1 ms task waits at most this long for a gap
 
-// ---- USB protocol (feature reports, see ../tools/nptest.py) ------------------------------------
+// ---- USB protocol (feature reports, see ../tools/npctl.py) ------------------------------------
 enum {
 	CMD_MODE = 1,         // [2] = mode
 	CMD_HV = 2,           // [2] = volts (0 = boost off)

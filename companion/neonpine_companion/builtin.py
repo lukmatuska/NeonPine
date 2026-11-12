@@ -1,4 +1,4 @@
-"""The firmware's built-in animations, ported 1:1 from firmware/neonpine_test/anim.c (same Q12 integer math
+"""The firmware's built-in animations, ported 1:1 from firmware/neonpine/anim.c (same Q12 integer math
 and tables), so previews in the app look exactly like the tree.
 
 Times are ms since the tree started (the firmware's animation clock = status uptime).

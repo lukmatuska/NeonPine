@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """NeonPine firmware – USB monitor / control (Linux hidraw, no extra packages).
 
-  nptest.py                 status once
-  nptest.py watch           status every 0.2 s
-  nptest.py mode auto|manual|off
-  nptest.py show candle      animation: candle breathe twinkle garland snowfall heartbeat drift sleep
+  npctl.py                 status once
+  npctl.py watch           status every 0.2 s
+  npctl.py mode auto|manual|off
+  npctl.py show candle      animation: candle breathe twinkle garland snowfall heartbeat drift sleep
                             (touch: tap); bring-up shows: test sweep glow
-  nptest.py sleep on|off     sleep timer: dims over 20 min, then off (touch: double tap)
-  nptest.py autolight on|off light sensor: off in daylight, on at dusk, adaptive brightness, wave
-  nptest.py dim duty|rail    dim with the PWM duty (default) or the HV rail 75-105 V (simulator)
-  nptest.py wave             pretend a hand waved (next animation)
-  nptest.py hv 90           HV setpoint in volts (0 = boost off, max 105)
-  nptest.py lamps 1k 2a 3ac all=off ...   manual lamp states (k = pad 1, a = pad 2, ac = both)
-  nptest.py pause on|off    hold / resume the auto sequence
-  nptest.py level 128       brightness 0-255 for manual mode (gamma ~2)
-  nptest.py pwm 7 400       PWM frame in ms (1-20) and on-time at level 1 in us (default 7 400)
-  nptest.py budget on|off   power budget limiter (default on)
-  nptest.py style normal|retro     normal = 7 ms / 400 us, retro = 7 ms / 300 us flicker (touch: triple tap)
-  nptest.py bright 128      overall brightness 8-255 (touch: hold)
-  nptest.py ton 20          boost gate on-time in us (1-20, default 20)
-  nptest.py freq 40         boost frequency in kHz (5 .. 1/(t_on + 4 us), default 40)
-  nptest.py touch 500       touch threshold above baseline (0 = default 500)
-  nptest.py save            save the settings now (they are saved 3 s after a change anyway)
-  nptest.py clear           clear a fault
-  nptest.py bootloader      reboot into the USB bootloader (minichlink does this by itself)
+  npctl.py sleep on|off     sleep timer: dims over 20 min, then off (touch: double tap)
+  npctl.py autolight on|off light sensor: off in daylight, on at dusk, adaptive brightness, wave
+  npctl.py dim duty|rail    dim with the PWM duty (default) or the HV rail 75-105 V (simulator)
+  npctl.py wave             pretend a hand waved (next animation)
+  npctl.py hv 90           HV setpoint in volts (0 = boost off, max 105)
+  npctl.py lamps 1k 2a 3ac all=off ...   manual lamp states (k = pad 1, a = pad 2, ac = both)
+  npctl.py pause on|off    hold / resume the auto sequence
+  npctl.py level 128       brightness 0-255 for manual mode (gamma ~2)
+  npctl.py pwm 7 400       PWM frame in ms (1-20) and on-time at level 1 in us (default 7 400)
+  npctl.py budget on|off   power budget limiter (default on)
+  npctl.py style normal|retro     normal = 7 ms / 400 us, retro = 7 ms / 300 us flicker (touch: triple tap)
+  npctl.py bright 128      overall brightness 8-255 (touch: hold)
+  npctl.py ton 20          boost gate on-time in us (1-20, default 20)
+  npctl.py freq 40         boost frequency in kHz (5 .. 1/(t_on + 4 us), default 40)
+  npctl.py touch 500       touch threshold above baseline (0 = default 500)
+  npctl.py save            save the settings now (they are saved 3 s after a change anyway)
+  npctl.py clear           clear a fault
+  npctl.py bootloader      reboot into the USB bootloader (minichlink does this by itself)
 """
 import fcntl
 import glob
@@ -43,7 +43,7 @@ STYLES = ["normal", "retro"]
 GESTURES = ["-", "tap", "double tap", "hold (ramp)", "hold 3 s (off/on)", "triple tap", "wave"]
 FAULTS = ["none", "OVERVOLTAGE", "NO RISE (HV < 20 V for 1 s)"]
 LAMP = ["--", "L", "R", "LR"]  # lit electrodes: left (pad 1, K switch), right (pad 2, A switch)
-STATUS_FMT = "<BBBBBBBBHHHHHHHHIIBBBBBBBBBBHHBBHHBBBBHHI"  # see struct np_status in neonpine_test.c (fw v3)
+STATUS_FMT = "<BBBBBBBBHHHHHHHHIIBBBBBBBBBBHHBBHHBBBBHHI"  # see struct np_status in neonpine.c (fw v3)
 
 
 def ioc(nr, size):
@@ -59,7 +59,7 @@ def find_device():
                     return "/dev/" + os.path.basename(d)
         except OSError:
             pass
-    sys.exit("NeonPine test firmware (%04x:%04x) not found – still in the bootloader, or no udev rule?" % (VID, PID))
+    sys.exit("NeonPine firmware (%04x:%04x) not found – still in the bootloader, or no udev rule?" % (VID, PID))
 
 
 def get_status(fd):

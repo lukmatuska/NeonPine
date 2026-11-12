@@ -21,7 +21,7 @@ The tree needs no driver on Windows; on Linux it needs a udev rule.
 **Tray menu**: on/off, animation, brightness, sleep timer, retro, open, quit. Left-click shows or hides the window.
 Starting the app a second time brings up the running instance.
 
-The tree needs **firmware v3** (in `../firmware/neonpine_test/`) for custom animations, tuning, settings and live mode.
+The tree needs **firmware v3** (in `../firmware/neonpine/`) for custom animations, tuning, settings and live mode.
 With older firmware the app still works as a remote control and can update the firmware.
 
 ## Run from source
@@ -46,7 +46,7 @@ packaging/install_linux.sh       # menu entry + icon (--udev also installs the r
 
 ```sh
 pip install PySide6 pyinstaller
-python packaging/build.py      # bundles ../firmware/neonpine_test/neonpine_test.bin if it has been built
+python packaging/build.py      # bundles ../firmware/neonpine/neonpine.bin if it has been built
 ```
 * Windows → `dist/NeonPine Companion.exe` (single file)
 * Linux → `dist/NeonPine-Companion/` (folder; `--onefile` for a single file)

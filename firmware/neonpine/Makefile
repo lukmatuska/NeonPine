@@ -1,11 +1,11 @@
-# NeonPine test firmware (user flash at 0x08000000).
-#   make            build neonpine_test.bin
+# NeonPine firmware (user flash at 0x08000000).
+#   make            build neonpine.bin
 #   make flash      flash over USB through the rv003usb bootloader (the running app is rebooted into it)
 #   make flash-swd  flash over SWD with a WCH-LinkE on the J2 pogo pads
 
 all : build
 
-TARGET:=neonpine_test
+TARGET:=neonpine
 RV003USB:=../deps/rv003usb
 CH32FUN:=$(RV003USB)/ch32fun/ch32fun
 TARGET_MCU:=CH32V003

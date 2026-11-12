@@ -20,7 +20,7 @@ enum {
 #define ANIM_CUSTOMS  8
 #define IS_ANIM( s )  ( (s) < ANIMS || ( (s) >= ANIM_LIVE && (s) < ANIM_CUSTOM0 + ANIM_CUSTOMS ) )
 
-// Store: the last STORE_PAGES flash pages. Page 0 = settings (neonpine_test.c), pages 1.. = custom
+// Store: the last STORE_PAGES flash pages. Page 0 = settings (neonpine.c), pages 1.. = custom
 // animation blob (format in anim.c and ../../companion). Firmware updates don't touch it as long as
 // the image stays below STORE_ADDR (the Makefile checks).
 #define STORE_PAGES   16

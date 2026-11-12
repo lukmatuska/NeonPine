@@ -2,7 +2,7 @@
 """Builds a standalone NeonPine Companion with PyInstaller (run it on the OS you build for).
 
     pip install PySide6 pyinstaller
-    python packaging/build.py [--firmware path/to/neonpine_test.bin] [--onedir]
+    python packaging/build.py [--firmware path/to/neonpine.bin] [--onedir]
 
 Windows: dist/NeonPine Companion.exe (one file). Linux: dist/NeonPine-Companion/ (a folder, starts faster;
 --onefile for a single file). The firmware image is bundled so the app can update trees by itself.
@@ -20,7 +20,7 @@ BUILD = os.path.join(ROOT, "build")
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--firmware", default=os.path.join(ROOT, "..", "firmware", "neonpine_test", "neonpine_test.bin"))
+    ap.add_argument("--firmware", default=os.path.join(ROOT, "..", "firmware", "neonpine", "neonpine.bin"))
     ap.add_argument("--onefile", action="store_true", help="single file (default on Windows)")
     ap.add_argument("--onedir", action="store_true", help="folder (default on Linux)")
     a = ap.parse_args()

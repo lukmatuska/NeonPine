@@ -19,11 +19,11 @@ jobs:
       - name: Build
         run: |
           make -C firmware deps
-          make -C firmware/neonpine_test build
+          make -C firmware/neonpine build
       - uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: firmware/neonpine_test/neonpine_test.bin
+          path: firmware/neonpine/neonpine.bin
 
   app:
     needs: firmware
@@ -45,7 +45,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libpulse0
       - run: python -m pip install --upgrade pip PySide6 pyinstaller
-      - run: python companion/packaging/build.py --firmware fw/neonpine_test.bin
+      - run: python companion/packaging/build.py --firmware fw/neonpine.bin
       - name: Pack (Linux)
         if: runner.os == 'Linux'
         run: tar -C companion/dist -czf companion/dist/NeonPine-Companion-linux-x64.tar.gz NeonPine-Companion

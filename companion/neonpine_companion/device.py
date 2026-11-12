@@ -1,4 +1,4 @@
-"""NeonPine USB protocol (firmware/neonpine_test/neonpine_test.c, usb_config.h).
+"""NeonPine USB protocol (firmware/neonpine/neonpine.c, usb_config.h).
 
 Feature reports on 1209:D003:
   0xAA GET  status (64 bytes)
