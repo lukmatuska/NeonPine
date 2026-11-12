@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Draw the HV boost section of NeonPine.kicad_sch with real wires (gen.py only writes label stubs).
 Removes gen.py's stubs, labels and power symbols on the boost parts, moves the parts into a clean layout
-and wires +5V -> L11 -> SW -> D1 -> HV+, the gate drive, the snubber, the divider and one GND return rail.
-Net names stay the same (SW, GATE, GATE_DRV, HV+, VFB labels; SNUB and FB_MID stay unnamed).
+and wires +5V -> L11 -> SW -> D1 -> HV+, the gate resistor, the snubber, the divider and one GND return rail.
+Net names stay the same (SW, GATE, GATE_BUF, HV+, VFB labels; SNUB and FB_MID stay unnamed).
 Usage: python3 tools/sch_boost.py   (run right after tools/gen.py)"""
 import sys, os, uuid, copy, math
 HERE=os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0,HERE); from sx import *
@@ -16,7 +16,7 @@ def g(e,k):
 def ref(sym):
     for x in sym:
         if isinstance(x,list) and x[0]=='property' and x[1]=='"Reference"': return x[2].strip('"')
-B=['C3','L11','D1','Q1','R1','R2','C4','D2','R12','C8','R5','R6','R7','C5']
+B=['C3','L11','D1','Q1','R1','C4','D2','R12','C8','R5','R6','R7','C5']
 syms={ref(e):e for e in T if isinstance(e,list) and e[0]=='symbol'}
 libs={e[1].strip('"'):e for e in g(T,'lib_symbols')[1:]}
 def pinxy(s):
@@ -64,7 +64,6 @@ mv('C3',121.92,40.64)
 mv('L11',134.62,R,90,(134.62,27.94,134.62,30.48,None))
 mv('D1',158.75,R,180,(158.75,27.94,158.75,30.48,None))
 mv('R1',125.73,58.42,90,(125.73,54.61,125.73,62.23,None))
-mv('R2',137.16,66.04)
 mv('Q1',144.78,58.42)
 mv('R12',170.18,46.99); mv('C8',170.18,58.42)
 mv('C4',195.58,40.64)
@@ -111,14 +110,14 @@ W(P['R5']['2'],P['R6']['1'])              # FB_MID (stays unnamed)
 W(P['R6']['2'],(236.22,59.69),P['R7']['1']); J(236.22,59.69)
 W((236.22,59.69),(248.92,59.69),(256.54,59.69)); W((248.92,59.69),P['C5']['1']); J(248.92,59.69); L('VFB',256.54,59.69)
 # gate drive
-W((119.38,58.42),P['R1']['1']); L('GATE_DRV',119.38,58.42,180)
-W(P['R1']['2'],(137.16,58.42),P['Q1']['1']); W((137.16,58.42),P['R2']['1']); J(137.16,58.42); L('GATE',130.81,58.42)
+W((119.38,58.42),P['R1']['1']); L('GATE_BUF',119.38,58.42,180)   # from the 5 V gate buffer U5 (drawn by gen.py, with R2)
+W(P['R1']['2'],P['Q1']['1']); L('GATE',130.81,58.42)
 # GND return rail
-drops=[P['R2']['2'],P['Q1']['3'],P['C8']['2'],P['C4']['2'],P['D2']['2'],P['R7']['2'],P['C5']['2']]
+drops=[P['Q1']['3'],P['C8']['2'],P['C4']['2'],P['D2']['2'],P['R7']['2'],P['C5']['2']]
 W(*[(p[0],G) for p in drops])
 for p in drops: W(p,(p[0],G))
 for p in drops[1:-1]: J(p[0],G)
-J(137.16,G); PWR('GND',137.16,G)
+PWR('GND',P['Q1']['3'][0],G)
 # insert before first symbol instance
 i=next(k for k,e in enumerate(T) if isinstance(e,list) and e[0]=='symbol')
 T[i:i]=new

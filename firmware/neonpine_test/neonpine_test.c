@@ -152,8 +152,8 @@ enum { GESTURE_TAP = 1, GESTURE_DOUBLE = 2, GESTURE_HOLD = 3, GESTURE_LONG = 4, 
 #define PWM_FRAME_MS_MAX     20
 // Styles (board 1, by eye at 7 ms): 400 us strikes every time, 300 us is borderline -> random flicker.
 // Shorter frames need a longer minimum (board 1: 2 ms -> 400 us, 4 ms -> 200 us).
-#define PWM_MIN_US_NORMAL    400
-#define PWM_MIN_US_RETRO     300
+#define PWM_MIN_US_NORMAL    200
+#define PWM_MIN_US_RETRO     100
 // Power budget: if HV sags more than BUDGET_SAG_MV below the soft-start target, the on-time above the
 // minimum is scaled down (fast); within BUDGET_OK_MV it creeps back up (1/256 per ms).
 #define BUDGET_SAG_MV        3000

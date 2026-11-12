@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Autoroute NeonPine.kicad_pcb with Freerouting, then refill zones.
-Usage: python3 tools/route.py <freerouting.jar> [passes] [--keep]
-  --keep  start from the existing tracks (finish an almost-complete board) instead of routing from scratch"""
+Usage: python3 tools/route.py <freerouting.jar> [passes] [--keep [--lock]]
+  --keep  start from the existing tracks (finish an almost-complete board) instead of routing from scratch
+  --lock  with --keep: export the existing tracks as fixed, so Freerouting only adds copper (protects hand routing)"""
 import sys, os, subprocess
 import pcbnew
 
 PRJ = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 PCB = os.path.join(PRJ, 'NeonPine.kicad_pcb')
 keep = '--keep' in sys.argv
-args = [a for a in sys.argv[1:] if a != '--keep']
+lock = keep and '--lock' in sys.argv
+args = [a for a in sys.argv[1:] if a not in ('--keep', '--lock')]
 jar, passes = args[0], (args[1] if len(args) > 1 else '40')
 dsn, ses = PCB.replace('.kicad_pcb', '.dsn'), PCB.replace('.kicad_pcb', '.ses')
 
@@ -17,6 +19,11 @@ b.SynchronizeNetsAndNetClasses(True)        # apply the .kicad_pro netclass patt
 seq = lambda c: [c[i] for i in range(len(c))]   # SWIG iterators are broken on Python 3.14
 if not keep:
     for t in seq(b.Tracks()): b.Remove(t)
+was_locked = set()
+if lock:
+    for t in seq(b.Tracks()):
+        if t.IsLocked(): was_locked.add(t.m_Uuid.AsString())
+        t.SetLocked(True)
 zones = seq(b.Zones())
 for z in zones: b.Remove(z)                    # pours would be exported as blocking planes
 assert pcbnew.ExportSpecctraDSN(b, dsn), 'DSN export failed'
@@ -31,6 +38,8 @@ txt = txt[:j] + '(circuit\n        (use_layer %s)' % hv_layers + txt[j + len('(c
 open(dsn, 'w').write(txt)
 subprocess.run(['java', '-jar', jar, '-de', dsn, '-do', ses, '-mp', passes, '--gui.enabled=false'], check=True)
 assert pcbnew.ImportSpecctraSES(b, ses), 'SES import failed'
+if lock:
+    for t in seq(b.Tracks()): t.SetLocked(t.m_Uuid.AsString() in was_locked)
 for z in zones: b.Add(z)
 pcbnew.ZONE_FILLER(b).Fill(b.Zones())
 pcbnew.SaveBoard(PCB, b)

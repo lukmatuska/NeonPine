@@ -96,7 +96,7 @@ LAMPS = {n: sc(*p) for n, p in LAMPS.items()}
 FIXED = {
     'TP2': (*sc(-8.6, 66.4), 0, 'F'),          # pot touch pad (front)
     'Q2': (*sc(-21.2, 52.5), 0, 'F'),          # ambient-light phototransistor = ornament in the left wing
-    'J1': (18 * SC - 3.4, 63.5 * SC, 270, 'B'),  # USB-C, mouth flush with the right pot edge
+    'J1': (18 * SC - 3.675, 63.5 * SC, 270, 'B'),  # USB-C 16P (USB4105), mouth flush with the right pot edge
     # the three big parts fill the pot: boost switch + inductor on the left, MCU next to the USB connector
     'L11': (*sc(-10.5, 61.2), 180, 'B'), 'Q1': (*sc(-1.5, 62.0), 90, 'B'), 'U1': (*sc(6.3, 62.5), 90, 'B'),
     # USB input protection in the strip right above the connector: TVS first, then the PTC
@@ -136,10 +136,12 @@ START = {r: (*sc(x, y), rot) for r, (x, y, rot) in {
     'J2': (2.0, 67.0, 90),     # SWD pogo pads (production programming, before the cover goes on)
     'U2': (0.0, 46.4, 180),    # lamp-drive shift register (74HC595BQ, DHVQFN-16), centre of tier 3; U3 is fixed (FIXED)
     'C9': (-3.7, 44.1, 180), 'C10': (17.0, 49.0, 0),
+    # USB branch: 3.3 V LDO in the left wing next to L11's +5V pad, gate buffer + D- pull-up above the MCU (tools/usb_migrate.py)
+    'U4': (-18.4, 56.7, 180), 'C11': (-21.55, 55.0, 0), 'U5': (1.2, 56.3, 0), 'C12': (0.75, 54.5, 0), 'R13': (4.0, 57.75, 180),
 }.items()}
 GAP = 0.1   # extra spacing around each optimised part (0.2 mm on top of the courtyards)
 # airwire weights: short, fat switching loops first, then decoupling and the sensitive ADC node
-NET_W = {'/SW': 8, '/GATE': 4, '/GATE_DRV': 2, '/HV+': 1.5, '/VFB': 2, '/FB_MID': 1.5, 'GND': 0.0}
+NET_W = {'/SW': 8, '/GATE': 4, '/GATE_BUF': 3, '/GATE_DRV': 2, '/USB_DP': 2, '/USB_DM': 2, '/HV+': 1.5, '/VFB': 2, '/FB_MID': 1.5, 'GND': 0.0}
 PAIR_W = [(('C6', '1'), ('U1', '9'), 6), (('C6', '2'), ('U1', '7'), 4),        # MCU decoupling
           (('C3', '1'), ('L11', '1'), 6), (('C3', '2'), ('Q1', '3'), 5),        # boost input loop
           (('C4', '2'), ('Q1', '3'), 3), (('C5', '1'), ('U1', '20'), 4),        # output loop, ADC filter
@@ -150,6 +152,8 @@ PAIR_W = [(('C6', '1'), ('U1', '9'), 6), (('C6', '2'), ('U1', '7'), 4),        #
           (('D1', '2'), ('Q1', '2'), 12),                                            # SW node: diode right at the drain tab
           (('R2', '1'), ('Q1', '1'), 3), (('D1', '1'), ('C4', '1'), 10), (('D2', '1'), ('C4', '1'), 4),
           (('F1', '2'), ('J1', 'A9'), 8),
+          (('C11', '1'), ('U4', '2'), 6), (('C12', '1'), ('U5', '5'), 6), (('U5', '4'), ('R1', '1'), 3),   # LDO out, buffer
+          (('R13', '1'), ('U1', '12'), 4), (('R13', '2'), ('U1', '14'), 4),
           (('C9', '1'), ('U2', '16'), 6), (('C9', '2'), ('U2', '8'), 3), (('C10', '1'), ('U3', '16'), 6), (('C10', '2'), ('U3', '8'), 3)]
 
 # ---------------- front silkscreen art: rim line, a string of light beads along the branches, snowflakes, little stars.

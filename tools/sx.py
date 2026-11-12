@@ -22,8 +22,21 @@ _cache={}
 def getsym(lib,name):
     if lib not in _cache: _cache[lib]=parse(open(LIB+lib+'.kicad_sym').read())[0]
     for e in _cache[lib]:
-        if isinstance(e,list) and e[0]=='symbol' and e[1]=='"%s"'%name: return e
-    raise KeyError(name)
+        if isinstance(e,list) and e[0]=='symbol' and e[1]=='"%s"'%name: break
+    else: raise KeyError(name)
+    ext=[x for x in e if isinstance(x,list) and x[0]=='extends']
+    if not ext: return e
+    # derived symbol (extends): the base symbol's graphics/pins with the derived symbol's own properties
+    import copy
+    base=copy.deepcopy(getsym(lib,ext[0][1].strip('"'))); bn=base[1].strip('"')
+    props=[x for x in e if isinstance(x,list) and x[0]=='property']
+    out=['symbol','"%s"'%name]
+    for x in base[2:]:
+        if isinstance(x,list) and x[0]=='property': continue
+        if isinstance(x,list) and x[0]=='symbol': x[1]='"%s%s"'%(name,x[1].strip('"')[len(bn):])
+        out.append(x)
+    i=next(k for k,x in enumerate(out) if isinstance(x,list) and x[0]=='symbol')
+    return out[:i]+props+out[i:]
 def pins(sym,unit=1):
     r=[]
     for u in sym:
