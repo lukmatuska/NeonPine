@@ -245,11 +245,13 @@ class HomePage(QWidget):
         elif getattr(self, "_thumb_cfg_src", None) is None:
             m.cfg.drift_s, m.cfg.fade_ds = 6, 15
         m.customs = self.ctx.customs
+        dark = self.ctx.status is not None and self.ctx.status.style == 1  # retro: the tree plays dark modes
+        m.status = self.ctx.status
         for c in self.cards:
             if c.show < 6:
-                e1, e2 = builtin.mode_frame(c.show, t, params)
+                e1, e2 = builtin.mode_frame(c.show, t, params, dark)
             elif c.show == 7:
-                e1, e2 = builtin.mode_frame(0, t, params)
+                e1, e2 = builtin.mode_frame(0, t, params, dark)
             elif c.show == 6:
                 e1, e2, _ = m.anim_frame(6, 6, 4096, t)
             else:

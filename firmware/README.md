@@ -114,7 +114,9 @@ After the ≈ 5 s bootloader wait it plays the saved animation (**Candle** on a 
 | 16–23 | custom | keyframe animations from the store (made in the companion app) |
 
 Mode changes crossfade over 1.5 s (setting). Modes 0–5 each have a **speed**, **gain** and **offset** (settings page), so the
-companion app can retune them; the defaults (×1, 100 %, 0) are the simulator's animations. Checked on the PC against the simulator's formulas (deterministic modes within 0.6 %).
+companion app can retune them; the defaults (×1, 100 %, 0) are the simulator's animations.
+In **retro** style modes 0–5 run darker: no brightness floors, deeper swings, and electrodes below 0.08 are switched off
+instead of glowing at the minimum on-time (candle dips out, breathe goes dark on one side, the heartbeat tree echoes the beat). Checked on the PC against the simulator's formulas (deterministic modes within 0.6 %).
 * **Electrodes:** the simulator's e1 (left) is lamp pad 1 = K switch, e2 (right) is pad 2 = A switch; pad 1 is the left
   lead on every lamp (`NeonPine.kicad_pcb`). Both share the lamp's PWM window (left first), at most 100 % together.
 * **Brightness:** the simulator dims with the HV rail (75–105 V). With PWM every window has to strike anew, which needs
@@ -128,7 +130,7 @@ companion app can retune them; the defaults (×1, 100 %, 0) are the simulator's 
 |---|---|
 | tap | next animation |
 | double tap | sleep timer on/off: dims over 20 min, then off |
-| triple tap | style: normal (7 ms / 400 µs, steady) ↔ retro (7 ms / 300 µs, random flicker) |
+| triple tap | style: normal (7 ms / 400 µs, steady) ↔ retro (7 ms / 300 µs, random flicker, dark animations) |
 | hold > 0.45 s | brightness ramp, alternating direction |
 | hold 3 s | off / on. While off, nothing else reacts (like the simulator) |
 

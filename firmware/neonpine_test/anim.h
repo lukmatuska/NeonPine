@@ -46,5 +46,6 @@ extern uint32_t anim_cur_t0, anim_prev_t0;  // when the current / previous show 
 extern uint16_t anim_drift_s;             // drift: time per animation, s
 extern uint16_t anim_drift_mask;          // drift list: bits 0-5 = modes 0-5, bits 8-15 = custom 0-7
 extern uint8_t anim_fade_ds;              // crossfade between modes, 0.1 s
+extern uint8_t anim_dark;                 // retro style: modes 0-5 without brightness floors, dim electrodes off
 
 int32_t anim_smooth( int32_t x );  // smoothstep, Q12

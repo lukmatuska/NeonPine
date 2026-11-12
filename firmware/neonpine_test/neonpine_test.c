@@ -580,6 +580,7 @@ static void set_style( int st )
 {
 	style = st;
 	pwm_min_us = st == STYLE_RETRO ? PWM_MIN_US_RETRO : PWM_MIN_US_NORMAL;
+	anim_dark = st == STYLE_RETRO;
 }
 
 static void sleep_set( int on )

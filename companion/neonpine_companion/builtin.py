@@ -10,6 +10,7 @@ BASE_INC = [170, 392, 869, 157, 362, 802, 46, 3050, 1291, 7047]
 INC_MODE = [0, 0, 0, 0, 0, 0, 0, 1, 1, 4]
 CANDLE, BREATHE, TWINKLE, GARLAND, SNOWFALL, HEARTBEAT, DRIFT, SLEEP = range(8)
 M32 = 0xFFFFFFFF
+ANIM_OFF = 328  # dark (retro) modes: electrodes below 0.08 are off (anim.c)
 
 # anim_tables.h (tools/gen_anim_tables.py)
 SIN = [
@@ -111,16 +112,24 @@ class Clocks:
         self.hb = (sp[HEARTBEAT] * t & M32) >> 6
 
 
-def candle(i, side, c):
+# dark = retro style (anim_dark): no brightness floors, deeper swings, dim electrodes off
+
+
+def candle(i, side, c, dark):
     seed = i + 101 if side else i + 1
     a = c.a[3:6] if side else c.a[0:3]
     f = (vnoise(seed, a[0]) * 2253 + vnoise(seed + 11, a[1]) * 1147 + vnoise(seed + 23, a[2]) * 696) >> 12
     dip = 1229 if vnoise(i + 90 if side else i + 40, c.a[6]) > 3809 else 0
+    if dark:
+        return clampq(-1843 + (6144 * f >> 12) - dip, 0, 2867)
     return clampq(1147 + (1638 * f >> 12) - dip, 328, 2458)
 
 
-def breathe(i, side, c):
-    s = 2048 + (sinq((c.a[8] >> 8) - ROW[i] * 5243) >> 1)
+def breathe(i, side, c, dark):
+    s = sinq((c.a[8] >> 8) - ROW[i] * 5243)
+    if dark:
+        return max(0, -s if side else s)
+    s = 2048 + (s >> 1)
     return Q - s if side else s
 
 
@@ -128,52 +137,56 @@ def breathe_rail(c):
     return 328 + (3768 * (2048 - (sinq((c.a[7] >> 8) + 16384) >> 1)) >> 12)
 
 
-def twinkle(i, side, c):
+def twinkle(i, side, c, dark):
     j = side * 10 + i
     p = 2200 + (hashq(31, j) * 3200 >> 12)
     ph = (c.tw + (hashq(57, j) * p >> 12)) % p
     e = smooth(ph * Q // 350) if ph < 350 else expneg((ph - 350) * Q // 550)
-    return 246 + (3441 * e >> 12)
+    return 3687 * e >> 12 if dark else 246 + (3441 * e >> 12)
 
 
-def garland(i, side, c):
+def garland(i, side, c, dark):
     cyc = c.ga % 5200
     k = GARLAND_RANK[i]
+    lo = 0 if dark else 205
     if cyc <= 3400:
         pos = cyc * 81920 // 3400
         if not side:
-            return 205 + (2253 * clampq(pos - 2 * k * Q, 0, Q) >> 12)
-        return 205 + (1638 * clampq(pos - (2 * k + 1) * Q, 0, Q) >> 12)
+            return lo + (2253 * clampq(pos - 2 * k * Q, 0, Q) >> 12)
+        return lo + (1638 * clampq(pos - (2 * k + 1) * Q, 0, Q) >> 12)
     ft = cyc - 3400
     if ft < 180 or i == 0:
         return 2048
-    return 205 + (1843 * expneg(ft * 9011 // 1000) >> 12)
+    return lo + ((2048 - lo) * expneg(ft * 9011 // 1000) >> 12)
 
 
-def snowfall(i, side, c):
+def snowfall(i, side, c, dark):
     ph = (c.a[9] >> 8) - ROW[i] * 14418
     ph += 19661 + (hashq(89, i) * 7864 >> 12) if side else (hashq(51, i) * 3932 >> 12)
     s = max(0, sinq(ph))
     s2 = s * s >> 12
     s6 = ((s2 * s2 >> 12) * s2) >> 12
-    return 205 + (2867 * s6 >> 12)
+    return 3072 * s6 >> 12 if dark else 205 + (2867 * s6 >> 12)
 
 
-def heartbeat(i, side, c):
-    if i:
+def heartbeat(i, side, c, dark):
+    if i and not dark:
         return 1147
-    cyc = c.hb % 1000
+    cyc = c.hb % 1000 - (ROW[i] * 70 if dark else 0)
     mu, w = (280, 60) if side else (50, 50)
     d = cdiv((cyc - mu) * Q, w)
     u = 8 * Q if d > 3 * Q or d < -3 * Q else d * d >> 12
+    if dark:
+        return (2458 if i else Q) * expneg(u) >> 12
     return clampq(614 + (3482 * expneg(u) >> 12), 0, Q)
 
 
 MODES = [candle, breathe, twinkle, garland, snowfall, heartbeat]
 
 
-def mode_frame(m, t, params):
-    """Modes 0-5 (7 = sleep plays candle): (left[10], right[10]) Q12 after speed / gain / offset."""
+def mode_frame(m, t, params, dark=False):
+    """Modes 0-5 (7 = sleep plays candle): (left[10], right[10]) Q12 after speed / gain / offset.
+    dark: retro style (anim_dark)."""
     if m == SLEEP:
         m = CANDLE
     c = Clocks(int(t), params)
@@ -181,7 +194,8 @@ def mode_frame(m, t, params):
     out = ([0] * 10, [0] * 10)
     for side in (0, 1):
         for i in range(10):
-            out[side][i] = clampq((fn(i, side, c) * p.gain >> 7) + p.offset * 16, 0, Q)
+            v = clampq((fn(i, side, c, dark) * p.gain >> 7) + p.offset * 16, 0, Q)
+            out[side][i] = 0 if dark and v < ANIM_OFF else v
     return out
 
 
