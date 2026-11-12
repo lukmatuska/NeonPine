@@ -96,8 +96,7 @@ until make -C neonpine flash; do sleep 0.3; done
 The SWD path (`make flash-swd`, or `make first-flash` again) always works.
 
 ## What the firmware does
-After the ≈ 5 s bootloader wait it plays the saved animation (**Candle** on a fresh board). The directory is still called
-`neonpine/`.
+After the ≈ 5 s bootloader wait it plays the saved animation (**Candle** on a fresh board).
 
 ### Animations (the NeonPine simulator artifact, ported to fixed point in `anim.c`)
 | # | Name | |
