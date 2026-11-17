@@ -79,3 +79,28 @@ Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags
 [UninstallDelete]
 ; Settings and saved animations live in %APPDATA%\neonpine-companion and are kept on purpose
 Type: filesandordirs; Name: "{app}"
+
+[Code]
+// A Companion running in the tray keeps its files locked, and Restart Manager (CloseApplications) does not
+// close it, so ask it to quit through its single-instance socket (--quit waits until it has exited),
+// then force-close whatever is left.
+procedure StopRunningApp(const ExePath: String);
+var
+  RC: Integer;
+begin
+  if FileExists(ExePath) then
+    Exec(ExePath, '--quit', '', SW_HIDE, ewWaitUntilTerminated, RC);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM "{#AppExe}"', '', SW_HIDE, ewWaitUntilTerminated, RC);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopRunningApp(ExpandConstant('{app}\{#AppExe}'));
+  Result := '';
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  StopRunningApp(ExpandConstant('{app}\{#AppExe}'));
+  Result := True;
+end;

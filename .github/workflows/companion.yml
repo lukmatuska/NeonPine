@@ -1,9 +1,14 @@
 # Builds the firmware, then the NeonPine Companion for Windows (installer + portable zip) and Linux with that firmware bundled.
 # The results are attached to the workflow run as artifacts.
+# Pushing a tag companion-v<version> (matching __version__ in companion/neonpine_companion/__init__.py) also publishes
+# them as a GitHub release:  git tag companion-v1.0.0 && git push origin companion-v1.0.0
 name: Companion app
 
 on:
   push:
+    branches: ["**"]
+    tags: ["companion-v*"]
+    # path filters only apply to branch pushes; a tag push always builds
     paths: ["companion/**", "firmware/**", ".github/workflows/companion.yml"]
   workflow_dispatch:
 
@@ -12,6 +17,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Tag matches app version
+        if: startsWith(github.ref, 'refs/tags/companion-v')
+        run: |
+          v=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' companion/neonpine_companion/__init__.py)
+          if [ "${GITHUB_REF_NAME}" != "companion-v$v" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match __version__ $v"; exit 1
+          fi
       - name: Toolchain
         run: |
           sudo apt-get update
@@ -19,11 +31,11 @@ jobs:
       - name: Build
         run: |
           make -C firmware deps
-          make -C firmware/neonpine_test build
+          make -C firmware/neonpine build
       - uses: actions/upload-artifact@v4
         with:
           name: firmware
-          path: firmware/neonpine_test/neonpine_test.bin
+          path: firmware/neonpine/neonpine.bin
 
   app:
     needs: firmware
@@ -52,14 +64,14 @@ jobs:
           if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
       - name: Build (Windows installer)
         if: runner.os == 'Windows'
-        run: python companion/packaging/build.py --installer --firmware fw/neonpine_test.bin
+        run: python companion/packaging/build.py --installer --firmware fw/neonpine.bin
       - name: Pack portable (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: Compress-Archive -Path "companion/dist/NeonPine Companion" -DestinationPath companion/dist/NeonPine-Companion-windows-x64-portable.zip
       - name: Build (Linux)
         if: runner.os == 'Linux'
-        run: python companion/packaging/build.py --firmware fw/neonpine_test.bin
+        run: python companion/packaging/build.py --firmware fw/neonpine.bin
       - name: Pack (Linux)
         if: runner.os == 'Linux'
         run: tar -C companion/dist -czf companion/dist/NeonPine-Companion-linux-x64.tar.gz NeonPine-Companion
@@ -70,3 +82,26 @@ jobs:
             companion/dist/*.exe
             companion/dist/*.zip
             companion/dist/*.tar.gz
+
+  release:
+    needs: app
+    if: startsWith(github.ref, 'refs/tags/companion-v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: NeonPine Companion ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            * **Windows:** `NeonPine-Companion-Setup-*.exe` (installer) or `NeonPine-Companion-windows-x64-portable.zip`
+            * **Linux:** `NeonPine-Companion-linux-x64.tar.gz` (needs the udev rule from `firmware/tools/99-neonpine.rules`)
+            * **Firmware:** `neonpine.bin` is already bundled in the app; it is attached separately for `make flash` / minichlink.
+
+            The installer is not code-signed, so Windows SmartScreen will warn: *More info → Run anyway*.
+          files: release/*

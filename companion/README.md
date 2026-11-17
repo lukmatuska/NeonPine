@@ -59,6 +59,13 @@ PyInstaller doesn't cross-compile: build each OS on that OS. `.github/workflows/
 it builds the firmware on Ubuntu, then the Windows installer, a portable Windows zip and a Linux tarball with that firmware inside, and attaches them
 to the workflow run.
 
+**Releasing:** bump `__version__` in `neonpine_companion/__init__.py`, commit, then push a matching tag. The workflow builds
+everything and publishes a GitHub release with the installer, the portable zip, the Linux tarball and `neonpine.bin`:
+```sh
+git tag companion-v1.0.0
+git push origin companion-v1.0.0
+```
+
 ## How it fits together
 
 | File | |
@@ -75,5 +82,6 @@ to the workflow run.
 
 The protocol is documented in `../firmware/README.md` (USB protocol) and at the top of `device.py`.
 
-Untested so far: the Windows HID backend, WASAPI loopback capture and Windows builds (written against the Win32 API, not run yet) and macOS
-(it should work through `pip install hidapi`).
+The Windows installer has been built and tested (install, upgrade over a running app, uninstall). Untested so far: the Windows
+HID backend and WASAPI loopback capture against a real tree (written against the Win32 API), and macOS (it should work through
+`pip install hidapi`).

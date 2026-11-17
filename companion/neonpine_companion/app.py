@@ -454,13 +454,19 @@ def main():
     app.setPalette(dark_palette())
     app.setStyleSheet(QSS)
 
-    # one instance: a second start just brings the first one up
+    # one instance: a second start just brings the first one up.
+    # --quit asks the running one to exit and waits until it has (the installer uses it before replacing files).
+    quit_running = "--quit" in sys.argv
     key = "%s-%s" % (platform_utils.APP_ID, os.environ.get("USER") or os.environ.get("USERNAME") or "user")
     sock = QLocalSocket()
     sock.connectToServer(key)
     if sock.waitForConnected(300):
-        sock.write(b"show")
+        sock.write(b"quit" if quit_running else b"show")
         sock.waitForBytesWritten(300)
+        if quit_running:  # the connection closes when that process ends
+            return 0 if sock.waitForDisconnected(15000) else 1
+        return 0
+    if quit_running:
         return 0
     QLocalServer.removeServer(key)
     server = QLocalServer()
@@ -469,7 +475,20 @@ def main():
     ctx = AppContext()
     win = MainWindow(ctx)
     tray = Tray(ctx, win) if QSystemTrayIcon.isSystemTrayAvailable() else None
-    server.newConnection.connect(lambda: (server.nextPendingConnection(), show_window(win)))
+
+    def on_connection():
+        conn = server.nextPendingConnection()
+
+        def on_message():
+            if bytes(conn.readAll()).strip() == b"quit":
+                win.quitting = True
+                QApplication.quit()
+            else:
+                show_window(win)
+        conn.readyRead.connect(on_message)
+        if conn.bytesAvailable():
+            on_message()
+    server.newConnection.connect(on_connection)
     sched = Scheduler(ctx)  # noqa: F841 - kept alive
 
     start_hidden = ("--tray" in sys.argv or ctx.prefs["start_minimized"]) and tray is not None
