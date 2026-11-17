@@ -23,6 +23,7 @@
 #include "anim_tables.h"
 
 #define Q 4096
+#define ANIM_OFF 328  // dark (retro) built-in modes: electrodes below 0.08 are off, not at the minimum on-time
 
 // Tier of each lamp: LA1 star, LA2-3, LA4-6, LA7-10 (simulator ROW)
 static const uint8_t ROW[10] = { 0, 1, 1, 2, 2, 2, 3, 3, 3, 3 };
@@ -63,6 +64,7 @@ uint32_t anim_cur_t0, anim_prev_t0;
 uint16_t anim_drift_s = 180;
 uint16_t anim_drift_mask = 0x3f;
 uint8_t anim_fade_ds = 15;
+uint8_t anim_dark;
 
 // Modes contributing to this frame, weights Q12. Custom animations: the two keys around the frame time
 // (offsets from BLOB_ADDR) and how far between them (f, Q12, already shaped by the transition).
@@ -131,21 +133,27 @@ static int32_t vnoise( uint32_t seed, uint32_t x )  // value noise, x in Q16 lat
 }
 
 // ---- modes (simulator frame(m, t), per electrode) -------------------------------------------------
+// anim_dark (retro style): no brightness floors, deeper swings, electrodes below ANIM_OFF switched off.
 
 static int32_t candle( int i, int side )
 {
 	// clamp(0.28 + 0.4 * fbm(seed, t * rate) - dip, 0.08, 0.6); dip = 0.3 while vnoise(s + 40, 0.7 t) > 0.93
+	// dark: clamp(-0.45 + 1.5 * fbm - dip, 0, 0.7), low flicker goes off
 	uint32_t seed = side ? i + 101 : i + 1;
 	const uint32_t * c = fc.a + ( side ? CL_C2 : CL_C1 );
 	int32_t f = ( vnoise( seed, c[0] ) * 2253 + vnoise( seed + 11, c[1] ) * 1147 + vnoise( seed + 23, c[2] ) * 696 ) >> 12;
 	int32_t dip = vnoise( side ? i + 90 : i + 40, fc.a[CL_DIP] ) > 3809 ? 1229 : 0;
+	if( anim_dark ) return clampq( -1843 + ( 6144 * f >> 12 ) - dip, 0, 2867 );
 	return clampq( 1147 + ( 1638 * f >> 12 ) - dip, 328, 2458 );
 }
 
 static int32_t breathe( int i, int side )
 {
-	// s = 0.5 + 0.5 sin(2 pi (t / 13 - ROW * 0.08)); e1 = s, e2 = 1 - s
-	int32_t s = 2048 + ( sinq( ( fc.a[CL_D13] >> 8 ) - ROW[i] * 5243u ) >> 1 );
+	// s = sin(2 pi (t / 13 - ROW * 0.08)); e1 = 0.5 + 0.5 s, e2 = 1 - e1
+	// dark: e1 = max(0, s), e2 = max(0, -s), each side off half the time
+	int32_t s = sinq( ( fc.a[CL_D13] >> 8 ) - ROW[i] * 5243u );
+	if( anim_dark ) { if( side ) s = -s; return s > 0 ? s : 0; }
+	s = 2048 + ( s >> 1 );
 	return side ? Q - s : s;
 }
 
@@ -158,47 +166,53 @@ static int32_t breathe_rail( void )
 static int32_t twinkle( int i, int side )
 {
 	// period P = 2.2 .. 5.4 s, random phase; 0.35 s swell (smoothstep), then exp decay (0.55 s)
+	// 0.06 .. 0.9, dark: 0 .. 0.9
 	uint32_t j = side * 10 + i;
 	uint32_t p = 2200 + ( hashq( 31, j ) * 3200 >> 12 );
 	uint32_t ph = ( ( fc.tw >> 6 ) + ( hashq( 57, j ) * p >> 12 ) ) % p;
 	int32_t e = ph < 350 ? anim_smooth( ph * Q / 350 ) : expneg( ( ph - 350 ) * Q / 550 );
-	return 246 + ( 3441 * e >> 12 );
+	return anim_dark ? 3687 * e >> 12 : 246 + ( 3441 * e >> 12 );
 }
 
 static int32_t garland( int i, int side )
 {
 	// 5.2 s cycle: 3.4 s chase over 20 electrode steps, then the star holds and the rest decays
+	// floor 0.05, dark: none (off until the chase reaches it, decays to off)
 	uint32_t c = ( fc.ga >> 6 ) % 5200;
-	int32_t k = GARLAND_RANK[i];
+	int32_t k = GARLAND_RANK[i], lo = anim_dark ? 0 : 205;
 	if( c <= 3400 )
 	{
 		int32_t pos = c * 81920u / 3400;  // Q12, 0..20
-		if( !side ) return 205 + ( 2253 * clampq( pos - 2 * k * Q, 0, Q ) >> 12 );
-		return 205 + ( 1638 * clampq( pos - ( 2 * k + 1 ) * Q, 0, Q ) >> 12 );
+		if( !side ) return lo + ( 2253 * clampq( pos - 2 * k * Q, 0, Q ) >> 12 );
+		return lo + ( 1638 * clampq( pos - ( 2 * k + 1 ) * Q, 0, Q ) >> 12 );
 	}
 	uint32_t ft = c - 3400;
 	if( ft < 180 || i == 0 ) return 2048;  // flash of the whole tree, then the star stays at 0.5
-	return 205 + ( 1843 * expneg( ft * 9011 / 1000 ) >> 12 );
+	return lo + ( ( 2048 - lo ) * expneg( ft * 9011 / 1000 ) >> 12 );
 }
 
 static int32_t snowfall( int i, int side )
 {
 	// 0.05 + 0.7 * max(0, sin(2 pi ph))^6, ph = 0.42 t - ROW * 0.22 (+ per-electrode offsets)
+	// dark: 0.75 * max(0, sin)^6, off between pulses
 	uint32_t ph = ( fc.a[CL_SNOW] >> 8 ) - ROW[i] * 14418u;
 	ph += side ? 19661 + ( hashq( 89, i ) * 7864 >> 12 ) : ( hashq( 51, i ) * 3932 >> 12 );
 	int32_t s = sinq( ph );
 	if( s < 0 ) s = 0;
 	int32_t s2 = s * s >> 12, s6 = ( s2 * s2 >> 12 ) * s2 >> 12;
-	return 205 + ( 2867 * s6 >> 12 );
+	return anim_dark ? 3072 * s6 >> 12 : 205 + ( 2867 * s6 >> 12 );
 }
 
 static int32_t heartbeat( int i, int side )
 {
-	// tree at 0.28; star e1 beats at 0.05 s, e2 at 0.28 s of every second (Gaussian pulses)
-	if( i ) return 1147;
-	int32_t c = ( fc.hb >> 6 ) % 1000, mu = side ? 280 : 50, w = side ? 60 : 50;
+	// tree at 0.28; star e1 beats at 0.05 s, e2 at 0.28 s of every second (Gaussian pulses), floor 0.15
+	// dark: star off between beats, the tree echoes both beats at 0.6, 70 ms later per tier
+	// (c - mu stays within -260 .. 950, so the pulses never wrap)
+	if( !anim_dark && i ) return 1147;
+	int32_t c = ( fc.hb >> 6 ) % 1000 - ( anim_dark ? ROW[i] * 70 : 0 ), mu = side ? 280 : 50, w = side ? 60 : 50;
 	int32_t d = ( c - mu ) * Q / w;
 	int32_t u = ( d > 3 * Q || d < -3 * Q ) ? 8 * Q : d * d >> 12;
+	if( anim_dark ) return ( i ? 2458 : Q ) * expneg( u ) >> 12;
 	return clampq( 614 + ( 3482 * expneg( u ) >> 12 ), 0, Q );
 }
 
@@ -346,6 +360,7 @@ int anim_step( void )
 	{
 		const struct anim_par * p = &anim_pars[m];
 		v = clampq( ( electrode( m, lamp, side ) * p->gain >> 7 ) + p->offset * 16, 0, Q );
+		if( anim_dark && v < ANIM_OFF ) v = 0;  // any duty > 0 gets the full strike time: switch dim electrodes off
 	}
 	v = v * ent[ent_j].w >> 12;
 	if( side ) acc2[lamp] += v;

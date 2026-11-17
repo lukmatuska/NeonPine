@@ -20,7 +20,7 @@ enum {
 #define ANIM_CUSTOMS  8
 #define IS_ANIM( s )  ( (s) < ANIMS || ( (s) >= ANIM_LIVE && (s) < ANIM_CUSTOM0 + ANIM_CUSTOMS ) )
 
-// Store: the last STORE_PAGES flash pages. Page 0 = settings (neonpine_test.c), pages 1.. = custom
+// Store: the last STORE_PAGES flash pages. Page 0 = settings (neonpine.c), pages 1.. = custom
 // animation blob (format in anim.c and ../../companion). Firmware updates don't touch it as long as
 // the image stays below STORE_ADDR (the Makefile checks).
 #define STORE_PAGES   16
@@ -46,5 +46,6 @@ extern uint32_t anim_cur_t0, anim_prev_t0;  // when the current / previous show 
 extern uint16_t anim_drift_s;             // drift: time per animation, s
 extern uint16_t anim_drift_mask;          // drift list: bits 0-5 = modes 0-5, bits 8-15 = custom 0-7
 extern uint8_t anim_fade_ds;              // crossfade between modes, 0.1 s
+extern uint8_t anim_dark;                 // retro style: modes 0-5 without brightness floors, dim electrodes off
 
 int32_t anim_smooth( int32_t x );  // smoothstep, Q12

@@ -1,6 +1,6 @@
 """Custom keyframe animations: the editor's model, JSON files and the tree's binary blob.
 
-Blob (store pages 1.., parsed by anim_store_changed() in firmware/neonpine_test/anim.c):
+Blob (store pages 1.., parsed by anim_store_changed() in firmware/neonpine/anim.c):
   0  u16 magic 0x4E41 ("AN")   2  u16 length incl. header   4  u16 sum of bytes 6 .. length-1
   6  u8  count (<= 8)          7  u8  0
   8  per animation: u8 keys (>= 1), u8 flags (0), u32 duration ms (= sum of the keys), char name[12],

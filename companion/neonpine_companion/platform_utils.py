@@ -28,7 +28,7 @@ def bundled_firmware():
     here = os.path.dirname(os.path.abspath(__file__))
     for p in (resource_path("firmware", "neonpine.bin"),
               os.path.join(here, "firmware", "neonpine.bin"),
-              os.path.normpath(os.path.join(here, "..", "..", "firmware", "neonpine_test", "neonpine_test.bin"))):
+              os.path.normpath(os.path.join(here, "..", "..", "firmware", "neonpine", "neonpine.bin"))):
         if os.path.isfile(p):
             return p
     return None

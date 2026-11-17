@@ -1,11 +1,11 @@
 # NeonPine firmware – top level. See README.md.
 #
 #   make deps              fetch rv003usb + ch32fun (pinned) into deps/
-#   make                   build bootloader + test firmware + minichlink
-#   make first-flash       SWD (WCH-LinkE on J2), once per board: option bytes, USB bootloader, test firmware
+#   make                   build bootloader + firmware + minichlink
+#   make first-flash       SWD (WCH-LinkE on J2), once per board: option bytes, USB bootloader, firmware
 #   make pico              PicoRVD instead of a WCH-LinkE: loads the bootloader installer (PORT=/dev/ttyACM0)
-#   make flash             USB: flash the test firmware through the bootloader
-#   make flash-swd         SWD: flash only the test firmware
+#   make flash             USB: flash the firmware through the bootloader
+#   make flash-swd         SWD: flash only the firmware
 
 RV003USB_URL := https://github.com/cnlohr/rv003usb
 # 2026-10-30, ch32fun submodule at 1e4887e; bootloader/bootloader.c is a copy from this commit
@@ -32,13 +32,13 @@ $(MINICHLINK) : $(DEPS)
 
 build : $(DEPS) $(MINICHLINK)
 	$(MAKE) -C bootloader build
-	$(MAKE) -C neonpine_test build
+	$(MAKE) -C neonpine build
 	$(MAKE) -C installer build
 
 first-flash : build
 	$(MINICHLINK) -w $(OPTION_BYTES) option
 	$(MINICHLINK) -a -w bootloader/bootloader.bin bootloader -B
-	$(MINICHLINK) -w neonpine_test/neonpine_test.bin flash -b
+	$(MINICHLINK) -w neonpine/neonpine.bin flash -b
 
 pico : build
 	$(MAKE) -C installer pico
@@ -47,14 +47,14 @@ pico-result : build
 	$(MAKE) -C installer result
 
 flash : build
-	$(MAKE) -C neonpine_test flash
+	$(MAKE) -C neonpine flash
 
 flash-swd : build
-	$(MAKE) -C neonpine_test flash-swd
+	$(MAKE) -C neonpine flash-swd
 
 clean :
 	$(MAKE) -C bootloader clean
-	$(MAKE) -C neonpine_test clean
+	$(MAKE) -C neonpine clean
 	$(MAKE) -C installer clean
 
 .PHONY : all deps build first-flash pico pico-result flash flash-swd clean

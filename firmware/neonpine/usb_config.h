@@ -22,7 +22,7 @@
 // minichlink sends it on its own when it finds 1209:D003 instead of the bootloader (1209:B003).
 #define RV003USB_USE_REBOOT_FEATURE_REPORT 1
 
-// Feature report IDs, see neonpine_test.c, ../tools/nptest.py and ../../companion
+// Feature report IDs, see neonpine.c, ../tools/npctl.py and ../../companion
 #define NP_REPORT_STATUS  0xaa  // GET: 64-byte status block
 #define NP_REPORT_COMMAND 0xab  // SET: 8-byte command
 #define NP_REPORT_LIVE    0xac  // SET: live frame, 20 electrode levels
@@ -119,9 +119,9 @@ static const uint8_t config_descriptor[] = {
 };
 
 #define STR_MANUFACTURER u"NeonPine"
-#define STR_PRODUCT      u"NeonPine test firmware"
+#define STR_PRODUCT      u"NeonPine tree"
 #ifndef STR_SERIAL
-#define STR_SERIAL       u"NP-TEST-0001"
+#define STR_SERIAL       u"NP-0001"
 #endif
 
 struct usb_string_descriptor_struct {

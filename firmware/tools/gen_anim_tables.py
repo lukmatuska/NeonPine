@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Writes ../neonpine_test/anim_tables.h: lookup tables for the fixed-point animations (anim.c).
+"""Writes ../neonpine/anim_tables.h: lookup tables for the fixed-point animations (anim.c).
 
 The CH32V003 has no FPU and no multiplier, so sin / exp / noise hashing come from tables.
 Q12 = 4096 is 1.0. Rerun after changing anything here: python3 tools/gen_anim_tables.py
@@ -9,7 +9,7 @@ import os
 import random
 
 Q = 4096
-out = os.path.join(os.path.dirname(__file__), "..", "neonpine_test", "anim_tables.h")
+out = os.path.join(os.path.dirname(__file__), "..", "neonpine", "anim_tables.h")
 
 sin_tab = [round(Q * math.sin(2 * math.pi * k / 256)) for k in range(65)]           # quarter turn, 256 steps per turn
 exp_tab = [round(Q * math.exp(-k / 16)) for k in range(129)]                       # e^-x, x = 0 .. 8 in 1/16

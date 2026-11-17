@@ -76,7 +76,7 @@ class Mirror:
                 b = [v * 16 + (v >> 4) for v in lv[1]]
                 r = Q
             else:
-                a, b = builtin.mode_frame(m, t, self.cfg.params[:N_BASIC])
+                a, b = builtin.mode_frame(m, t, self.cfg.params[:N_BASIC], self.status is not None and self.status.style == 1)
                 r = builtin.rail(m, t, self.cfg.params)
             for i in range(10):
                 e1[i] += a[i] * w >> 12
