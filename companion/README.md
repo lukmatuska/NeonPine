@@ -49,10 +49,14 @@ pip install PySide6 pyinstaller
 python packaging/build.py      # bundles ../firmware/neonpine_test/neonpine_test.bin if it has been built
 ```
 * Windows → `dist/NeonPine Companion.exe` (single file)
+* Windows installer → `python packaging/build.py --installer` (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php),
+  `winget install JRSoftware.InnoSetup`) → `dist/NeonPine-Companion-Setup-<version>.exe`. Installs per user without admin
+  rights (all users optional), with Start menu entry, optional desktop icon and *Start with Windows*, and an uninstaller
+  that keeps settings and animations in `%APPDATA%\neonpine-companion`. Script: `packaging/windows/neonpine-companion.iss`.
 * Linux → `dist/NeonPine-Companion/` (folder; `--onefile` for a single file)
 
 PyInstaller doesn't cross-compile: build each OS on that OS. `.github/workflows/companion.yml` does this on GitHub:
-it builds the firmware on Ubuntu, then the Windows `.exe` and a Linux tarball with that firmware inside, and attaches them
+it builds the firmware on Ubuntu, then the Windows installer, a portable Windows zip and a Linux tarball with that firmware inside, and attaches them
 to the workflow run.
 
 ## How it fits together

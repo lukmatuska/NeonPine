@@ -1,4 +1,4 @@
-# Builds the firmware, then the NeonPine Companion for Windows and Linux with that firmware bundled.
+# Builds the firmware, then the NeonPine Companion for Windows (installer + portable zip) and Linux with that firmware bundled.
 # The results are attached to the workflow run as artifacts.
 name: Companion app
 
@@ -45,7 +45,21 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libegl1 libxkbcommon-x11-0 libxcb-cursor0 libxcb-icccm4 libxcb-keysyms1 libxcb-shape0 libpulse0
       - run: python -m pip install --upgrade pip PySide6 pyinstaller
-      - run: python companion/packaging/build.py --firmware fw/neonpine_test.bin
+      - name: Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - name: Build (Windows installer)
+        if: runner.os == 'Windows'
+        run: python companion/packaging/build.py --installer --firmware fw/neonpine_test.bin
+      - name: Pack portable (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path "companion/dist/NeonPine Companion" -DestinationPath companion/dist/NeonPine-Companion-windows-x64-portable.zip
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: python companion/packaging/build.py --firmware fw/neonpine_test.bin
       - name: Pack (Linux)
         if: runner.os == 'Linux'
         run: tar -C companion/dist -czf companion/dist/NeonPine-Companion-linux-x64.tar.gz NeonPine-Companion
@@ -54,4 +68,5 @@ jobs:
           name: NeonPine-Companion-${{ runner.os }}
           path: |
             companion/dist/*.exe
+            companion/dist/*.zip
             companion/dist/*.tar.gz
