@@ -3,6 +3,9 @@
 A desktop app for the NeonPine tree, for Linux and Windows. It lives in the system tray and talks to the tree over USB.
 The tree needs no driver on Windows; on Linux it needs a udev rule.
 
+**⬇ [Download the latest release](https://github.com/lukmatuska/NeonPine/releases/latest)**: Windows installer
+(`NeonPine-Companion-Setup-<version>.exe`), portable Windows zip, Linux tarball. The firmware is bundled.
+
 ![Tree page](docs/tree-page.png)
 
 ![Animation editor](docs/animations-page.png)
