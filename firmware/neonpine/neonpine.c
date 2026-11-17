@@ -126,14 +126,20 @@ enum { GESTURE_TAP = 1, GESTURE_DOUBLE = 2, GESTURE_HOLD = 3, GESTURE_LONG = 4, 
 #define LONG_HOLD_MS         3000  // off / on
 #define USER_LEVEL_MIN       8
 
-// Light sensor: TEPT4400 + 22k, DESIGN.md: 100 lx -> 4.4 V, i.e. 44 mV per lux.
+// Light sensor. Designed for TEPT4400 + 22k (DESIGN.md: 100 lx -> 4.4 V, 44 mV per lux).
+// Board 1 has an IR phototransistor + R9 = 100k instead, so "lux" is a relative IR scale:
+// 44 mV * 22k / 100k ~ 10 mV per unit, 1 ADC count ~ 0.5 unit. Measured (2026-11-17, lamps off):
+// incandescent room light at room distance 0 counts, hand over sensor 0, bulb at 30 cm saturated (~995).
+// The tree's own light adds 0-31 counts (avg ~6, not separable: dark slot disabled); a hand 5 cm in
+// front changes nothing, so reflection waves don't work with this part. Daylight not measured yet.
 #define LIGHT_SLOT_MS     100      // a dark slot (all lamps off) this often
 #define DARK_SLOT_US      500      // long enough for the phototransistor + 22k to settle
-#define MV_PER_LUX        44
-#define AUTO_OFF_LUX      100      // simulator: 150 lx, but with 22k the sensor saturates at ~110 lx
-#define AUTO_ON_LUX       20
+#define MV_PER_LUX        10
+#define AUTO_OFF_LUX      100      // ~200 counts / 1 V: well above the tree's own light (<= 16 units)
+#define AUTO_ON_LUX       20       // ~40 counts, checked with the lamps off
+#define ADAPT_FLOOR_LUX   16       // own light, ignored by the adaptive brightness (else it wobbles)
 #define AUTO_CONFIRM_MS   5000     // a reading has to hold this long before the tree switches
-#define WAVE_MIN_AMB      40       // shadow detection needs some room light (ADC counts)
+#define WAVE_MIN_AMB      60       // shadow detection needs some room light (ADC counts), above own light
 #define WAVE_MIN_REFL     30       // reflection rise needed (own light per unit duty, counts)
 #define WAVE_MIN_SAMPLES  2        // a wave lasts 0.2 .. 1.5 s
 #define WAVE_MAX_SAMPLES  15
@@ -770,7 +776,7 @@ static void light_task( void )
 	status.adc_ldr = lit;
 
 	if( !autolight ) { daylight_off = 0; adapt_q = Q; cand = confirm = 0; return; }
-	adapt_q = adapt_from_lux( lux );
+	adapt_q = adapt_from_lux( lux > ADAPT_FLOOR_LUX ? lux - ADAPT_FLOOR_LUX : 0 );
 
 	// Off in daylight, on at dusk (hysteresis + AUTO_CONFIRM_MS)
 	int over = daylight_off ? lux < AUTO_ON_LUX : lux > AUTO_OFF_LUX;

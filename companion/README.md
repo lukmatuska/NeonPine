@@ -3,6 +3,9 @@
 A desktop app for the NeonPine tree, for Linux and Windows. It lives in the system tray and talks to the tree over USB.
 The tree needs no driver on Windows; on Linux it needs a udev rule.
 
+**⬇ [Download the latest release](https://github.com/lukmatuska/NeonPine/releases/latest)**: Windows installer
+(`NeonPine-Companion-Setup-<version>.exe`), portable Windows zip, Linux tarball. The firmware is bundled.
+
 ![Tree page](docs/tree-page.png)
 
 ![Animation editor](docs/animations-page.png)
@@ -49,11 +52,22 @@ pip install PySide6 pyinstaller
 python packaging/build.py      # bundles ../firmware/neonpine/neonpine.bin if it has been built
 ```
 * Windows → `dist/NeonPine Companion.exe` (single file)
+* Windows installer → `python packaging/build.py --installer` (needs [Inno Setup 6](https://jrsoftware.org/isinfo.php),
+  `winget install JRSoftware.InnoSetup`) → `dist/NeonPine-Companion-Setup-<version>.exe`. Installs per user without admin
+  rights (all users optional), with Start menu entry, optional desktop icon and *Start with Windows*, and an uninstaller
+  that keeps settings and animations in `%APPDATA%\neonpine-companion`. Script: `packaging/windows/neonpine-companion.iss`.
 * Linux → `dist/NeonPine-Companion/` (folder; `--onefile` for a single file)
 
 PyInstaller doesn't cross-compile: build each OS on that OS. `.github/workflows/companion.yml` does this on GitHub:
-it builds the firmware on Ubuntu, then the Windows `.exe` and a Linux tarball with that firmware inside, and attaches them
+it builds the firmware on Ubuntu, then the Windows installer, a portable Windows zip and a Linux tarball with that firmware inside, and attaches them
 to the workflow run.
+
+**Releasing:** bump `__version__` in `neonpine_companion/__init__.py`, commit, then push a matching tag. The workflow builds
+everything and publishes a GitHub release with the installer, the portable zip, the Linux tarball and `neonpine.bin`:
+```sh
+git tag companion-v1.0.0
+git push origin companion-v1.0.0
+```
 
 ## How it fits together
 
@@ -71,5 +85,6 @@ to the workflow run.
 
 The protocol is documented in `../firmware/README.md` (USB protocol) and at the top of `device.py`.
 
-Untested so far: the Windows HID backend, WASAPI loopback capture and Windows builds (written against the Win32 API, not run yet) and macOS
-(it should work through `pip install hidapi`).
+The Windows installer has been built and tested (install, upgrade over a running app, uninstall). Untested so far: the Windows
+HID backend and WASAPI loopback capture against a real tree (written against the Win32 API), and macOS (it should work through
+`pip install hidapi`).

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NeonPine – quick start</title>
+<!-- A5 customer pamphlet, one sheet printed on both sides. Build the PDF with: python docs/pamphlet/build.py -->
+<style>
+  @page { size: 148mm 210mm; margin: 0; }
+  :root {
+    --ink: #1b1b1f;
+    --muted: #5e5e68;
+    --rule: #d9d6d2;
+    --neon: #f2600c;
+    --neon-soft: #fff1e6;
+    --paper: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 8.2pt; line-height: 1.32;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page {
+    width: 148mm; height: 210mm; padding: 9mm 9mm 8mm; overflow: hidden;
+    display: flex; flex-direction: column; page-break-after: always; break-after: page;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  h1, h2, .wordmark, .step-no, th { font-family: Bahnschrift, "DIN Alternate", "Arial Narrow", sans-serif; }
+  h2 {
+    font-size: 10.5pt; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    margin: 0 0 1.6mm; color: var(--ink);
+  }
+  h2 .tick { display: inline-block; width: 2.4mm; height: 2.4mm; background: var(--neon); border-radius: 50%;
+             margin-right: 1.6mm; vertical-align: .2mm; }
+  p { margin: 0 0 1.4mm; }
+  a { color: inherit; text-decoration: none; }
+  .muted { color: var(--muted); }
+  section { margin-bottom: 4mm; }
+
+  /* ---------- front ---------- */
+  header { display: flex; align-items: flex-end; justify-content: space-between; border-bottom: .5mm solid var(--ink);
+           padding-bottom: 2mm; margin-bottom: 1mm; }
+  .wordmark { font-size: 25pt; font-weight: 700; letter-spacing: .16em; line-height: 1; color: var(--neon); }
+  .wordmark span { color: var(--ink); }
+  header .tag { text-align: right; font-size: 8pt; color: var(--muted); line-height: 1.25; }
+  header .tag b { display: block; font-family: Bahnschrift, "Arial Narrow", sans-serif; font-size: 11pt; color: var(--ink);
+                  letter-spacing: .05em; text-transform: uppercase; font-weight: 600; }
+  .hero { display: block; width: 100%; height: 76mm; margin: 0 0 2mm; }
+  .hero text { font-family: "Segoe UI", Arial, sans-serif; fill: var(--ink); }
+  .hero .lbl { font-size: 64px; font-weight: 700; }
+  .hero .sub { font-size: 52px; fill: var(--muted); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-bottom: 4mm; }
+  .step { background: var(--neon-soft); border-radius: 2mm; padding: 2.4mm 2.6mm 2.6mm; }
+  .step-no { font-size: 15pt; font-weight: 700; color: var(--neon); line-height: 1; margin-bottom: 1mm; }
+  .step b { display: block; margin-bottom: .6mm; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; vertical-align: top; padding: 1.05mm 1.5mm 1.05mm 0; border-bottom: .2mm solid var(--rule); }
+  th { font-size: 8.4pt; font-weight: 600; white-space: nowrap; width: 33%; }
+  tr:last-child th, tr:last-child td { border-bottom: 0; }
+  .anims { margin-top: 2mm; font-size: 7.8pt; }
+  .anims b { color: var(--neon); }
+
+  /* ---------- back ---------- */
+  .app { display: grid; grid-template-columns: 31mm 1fr; gap: 4mm; align-items: start;
+         border: .5mm solid var(--neon); border-radius: 2.5mm; padding: 3mm 3.5mm; margin-bottom: 3.5mm; }
+  .qr { width: 31mm; height: 31mm; display: block; }
+  .qr-cap { font-size: 6.8pt; text-align: center; color: var(--muted); margin-top: .8mm; line-height: 1.2; }
+  .app h2 { color: var(--neon); }
+  .app ul { margin: 0 0 1.6mm; padding-left: 3.6mm; }
+  .app li { margin-bottom: .3mm; }
+  .url { font-family: Bahnschrift, "Arial Narrow", sans-serif; font-weight: 600; font-size: 8.6pt; letter-spacing: .02em; }
+  .note { font-size: 7.4pt; color: var(--muted); }
+
+  .safety { background: #f6f5f3; border-left: 1.2mm solid var(--ink); padding: 2.6mm 3mm 2.2mm; margin-bottom: 4mm; }
+  .safety h2 { display: flex; align-items: center; gap: 1.8mm; }
+  .safety ul { margin: 0; padding-left: 3.6mm; font-size: 7.6pt; line-height: 1.3; }
+  .safety li { margin-bottom: .55mm; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .cols section { margin-bottom: 3mm; }
+  .cols table { font-size: 7.6pt; }
+  .cols th { font-size: 7.6pt; width: 27%; }
+  .trouble th { width: 33%; }
+
+  footer { margin-top: auto; display: grid; grid-template-columns: 9mm 1fr 19mm; gap: 3mm; align-items: center;
+           border-top: .2mm solid var(--rule); padding-top: 2.4mm; font-size: 6.9pt; color: var(--muted); line-height: 1.3; }
+  footer .repo { text-align: center; font-size: 6.2pt; line-height: 1.15; }
+  footer .repo img { width: 17mm; height: 17mm; display: block; margin: 0 auto .6mm; }
+</style>
+</head>
+<body>
+
+<!-- ======================= FRONT ======================= -->
+<div class="page">
+  <header>
+    <div class="wordmark">NEON<span>PINE</span></div>
+    <div class="tag"><b>Quick start</b>Neon glow‑lamp tree · USB‑C 5 V</div>
+  </header>
+
+  <!-- Line drawing of the tree, traced from the PCB layout (docs/img/front.png, 1544 × 1736 px = 55 × 69 mm) -->
+  <svg class="hero" viewBox="-760 -10 3060 1760" preserveAspectRatio="xMidYMid meet" aria-label="NeonPine tree with its controls">
+    <defs>
+      <linearGradient id="lamp" x1="0" x2="1">
+        <stop offset="0" stop-color="#ff9a3c"/><stop offset=".5" stop-color="#ffd2a6"/><stop offset="1" stop-color="#ff8a24"/>
+      </linearGradient>
+      <radialGradient id="halo">
+        <stop offset="0" stop-color="#ff7a1a" stop-opacity=".38"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/>
+      </radialGradient>
+      <g id="capsule">
+        <ellipse cx="0" cy="125" rx="120" ry="190" fill="url(#halo)"/>
+        <rect x="-50" y="0" width="100" height="250" rx="50" fill="url(#lamp)" stroke="#d24c00" stroke-width="5"/>
+        <line x1="-12" y1="30" x2="-12" y2="215" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".7"/>
+      </g>
+    </defs>
+
+    <!-- board outline -->
+    <path d="M770 22 L820 132 L950 145 L872 228 L905 330 L905 420 L1075 640 L1000 700 L1000 722 L1225 1000 L1180 1050
+             L1190 1062 L1440 1290 L1420 1322 L1230 1340 L1210 1362 L1210 1655 L1110 1655 L1110 1720 L1000 1720 L1000 1655
+             L540 1655 L540 1720 L430 1720 L430 1655 L330 1655 L330 1362 L310 1340 L120 1322 L100 1290 L350 1062 L360 1050
+             L315 1000 L540 722 L540 700 L465 640 L635 420 L635 330 L668 228 L590 145 L720 132 Z"
+          fill="#24402c" stroke="#1b1b1f" stroke-width="10" stroke-linejoin="round"/>
+    <!-- silkscreen star / snowflake dots -->
+    <g fill="#fff" opacity=".85">
+      <circle cx="540" cy="625" r="10"/><circle cx="1000" cy="625" r="10"/><circle cx="1310" cy="1260" r="10"/>
+      <circle cx="160" cy="1290" r="8"/><circle cx="685" cy="385" r="8"/><circle cx="860" cy="385" r="8"/>
+    </g>
+
+    <!-- 10 neon lamps -->
+    <use href="#capsule" x="770" y="170"/>
+    <use href="#capsule" x="660" y="500"/><use href="#capsule" x="882" y="500"/>
+    <use href="#capsule" x="573" y="810"/><use href="#capsule" x="770" y="810"/><use href="#capsule" x="968" y="810"/>
+    <use href="#capsule" x="425" y="1118"/><use href="#capsule" x="648" y="1118"/><use href="#capsule" x="895" y="1118"/>
+    <use href="#capsule" x="1118" y="1118"/>
+
+    <text x="770" y="1520" text-anchor="middle" style="font-family: Bahnschrift, 'Arial Narrow', sans-serif; font-size: 92px;
+          letter-spacing: 10px; fill: #fff;">NEON PINE</text>
+    <!-- trunk pad -->
+    <circle cx="530" cy="1590" r="62" fill="none" stroke="#fff" stroke-width="7"/>
+    <!-- light sensor -->
+    <circle cx="282" cy="1245" r="44" fill="#d8262b" stroke="#1b1b1f" stroke-width="5"/>
+    <!-- USB-C -->
+    <rect x="1210" y="1430" width="42" height="210" rx="16" fill="#cfd2d6" stroke="#1b1b1f" stroke-width="6"/>
+
+    <!-- callouts -->
+    <g stroke="#f2600c" stroke-width="7" fill="none">
+      <polyline points="235,1245 -40,1245 -40,1170"/>
+      <polyline points="465,1590 -40,1590"/>
+      <polyline points="1260,1535 1560,1535"/>
+      <polyline points="1172,1235 1560,1235 1560,1120"/>
+    </g>
+    <g fill="#f2600c"><circle cx="282" cy="1245" r="13"/><circle cx="530" cy="1590" r="13"/>
+      <circle cx="1252" cy="1535" r="13"/><circle cx="1168" cy="1235" r="13"/></g>
+
+    <text x="-60" y="1080" text-anchor="end" class="lbl">Light sensor</text>
+    <text x="-60" y="1145" text-anchor="end" class="sub">on at dusk, off by day</text>
+    <text x="-60" y="1560" text-anchor="end" class="lbl">Trunk pad</text>
+    <text x="-60" y="1625" text-anchor="end" class="sub">tap · hold · double tap</text>
+    <text x="1600" y="1515" class="lbl">USB‑C 5 V</text>
+    <text x="1600" y="1580" class="sub">adapter or computer</text>
+    <text x="1600" y="1030" class="lbl">10 neon lamps</text>
+    <text x="1600" y="1095" class="sub">20 glowing electrodes</text>
+  </svg>
+
+  <section class="steps">
+    <div class="step">
+      <div class="step-no">1</div>
+      <b>Stand it up</b>
+      Push the tabs at the bottom of the tree and of its rear cover into the four slots of the stand base. The side
+      marked <b style="display:inline">FRONT</b> faces the lamps.
+    </div>
+    <div class="step">
+      <div class="step-no">2</div>
+      <b>Plug it in</b>
+      Connect a USB‑C cable to the socket on the right of the “pot” and to a certified 5 V USB adapter or a computer.
+    </div>
+    <div class="step">
+      <div class="step-no">3</div>
+      <b>Let it glow</b>
+      The tree lights up after about 5 s. In a completely dark room the lamps can take a few seconds to strike. This is
+      normal.
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="tick"></span>Touch controls</h2>
+    <table>
+      <tr><th>Tap the trunk pad</th><td>Next animation</td></tr>
+      <tr><th>Touch and hold</th><td>Brightness up or down (alternates with each hold)</td></tr>
+      <tr><th>Double tap</th><td>Sleep timer on/off: dims over 20 min, then switches off</td></tr>
+      <tr><th>Triple tap</th><td>Style: steady ↔ retro (flickers like an old neon sign)</td></tr>
+      <tr><th>Hold for 3 s</th><td>Off / on</td></tr>
+      <tr><th>Wave a hand over it</th><td>Next animation</td></tr>
+      <tr><th>Room gets dark / bright</th><td>On at dusk, off in daylight; brightness follows the room</td></tr>
+    </table>
+    <p class="anims"><b>Animations:</b> Candle · Breathe · Twinkle · Garland · Snowfall · Heartbeat · Drift (a new one every
+      3 min) · Sleep. The tree remembers your animation, style and brightness when unplugged.</p>
+  </section>
+</div>
+
+<!-- ======================= BACK ======================= -->
+<div class="page">
+  <div class="app">
+    <div>
+      <img class="qr" src="qr-download.svg" alt="QR code: github.com/lukmatuska/NeonPine/releases/latest">
+      <div class="qr-cap">Scan to download</div>
+    </div>
+    <div>
+      <h2>Get the NeonPine Companion app</h2>
+      <p>Free for <b>Windows 10/11</b> and <b>Linux</b>. Plug the tree into your computer with a USB‑C data cable (no driver
+        needed) and the app sits in the system tray:</p>
+      <ul>
+        <li>animations, brightness, sleep timer and retro style at a click</li>
+        <li>design your own animations: up to 8 are stored in the tree</li>
+        <li>let the tree dance to your music or show the computer’s load</li>
+        <li>update the tree’s firmware (your settings are kept)</li>
+      </ul>
+      <p class="url">github.com/lukmatuska/NeonPine/releases</p>
+      <p class="note">Windows: run <i>NeonPine‑Companion‑Setup.exe</i>. If SmartScreen asks, choose <i>More info → Run
+        anyway</i>.</p>
+    </div>
+  </div>
+
+  <section class="safety">
+    <h2>
+      <svg width="11" height="10" viewBox="0 0 22 20" aria-hidden="true"><path d="M11 1 L21 19 H1 Z" fill="#f2c200"
+        stroke="#1b1b1f" stroke-width="1.8" stroke-linejoin="round"/><rect x="10" y="7" width="2" height="6.5" fill="#1b1b1f"/>
+        <rect x="10" y="15" width="2" height="2" fill="#1b1b1f"/></svg>
+      Safety · read and keep these instructions
+    </h2>
+    <ul>
+      <li><b>Not a toy.</b> A decoration for adults, recommended for ages 14+. Not suitable for children under 3: it contains
+        small parts and glass lamps. Keep it away from children and pets.</li>
+      <li><b>Indoor use only,</b> in dry rooms. Keep it away from water and condensation (e.g. a cold windowsill).</li>
+      <li><b>Power it only from a certified 5 V USB adapter</b> (CE / UL‑listed, IEC 62368‑1) or a computer USB port.</li>
+      <li><b>Do not remove the rear cover.</b> Inside is a circuit of up to about 110 V DC. There are no user‑serviceable
+        parts.</li>
+      <li><b>Do not bend, pull or press the glass lamps.</b> If one breaks, unplug the tree, collect the glass wearing
+        gloves, and stop using it.</li>
+      <li>Use the supplied stand on a stable, flat surface, away from heat sources and open flames. Route the cable where
+        nobody trips over it and children can’t reach it.</li>
+      <li>Unplug it if it is damaged, makes unusual noises or smells, or does not work correctly.</li>
+    </ul>
+  </section>
+
+  <div class="cols">
+    <section>
+      <h2><span class="tick"></span>Specifications</h2>
+      <table>
+        <tr><th>Model</th><td>NeonPine NP‑1</td></tr>
+        <tr><th>Input</th><td>5 V ⎓ 0.15 A, USB‑C</td></tr>
+        <tr><th>Light</th><td>10 orange neon glow lamps</td></tr>
+        <tr><th>Size</th><td>55 × 69 mm, base 50 × 26 mm</td></tr>
+        <tr><th>Use</th><td>indoors, dry, 0–35 °C</td></tr>
+        <tr><th>In the box</th><td>tree, rear cover, stand base (no cable or adapter)</td></tr>
+      </table>
+    </section>
+    <section>
+      <h2><span class="tick"></span>Troubleshooting</h2>
+      <table class="trouble">
+        <tr><th>Stays dark</th><td>Check cable and adapter. It turns off in daylight: cover it with your hand.</td></tr>
+        <tr><th>Lamps start late</th><td>Normal for neon in the dark; they light within seconds.</td></tr>
+        <tr><th>Flickers on a PC</th><td>Use an adapter that supplies at least 0.5 A.</td></tr>
+        <tr><th>Care</th><td>Unplug, wipe with a dry, soft cloth. No liquids.</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <footer>
+    <!-- crossed-out wheeled bin, EN 50419 -->
+    <svg viewBox="0 0 40 52" width="9mm" height="11.7mm" aria-label="Separate collection for electrical equipment">
+      <g fill="none" stroke="#1b1b1f" stroke-width="2.2" stroke-linejoin="round">
+        <path d="M9 12 H31 L28.5 40 H11.5 Z"/><path d="M7 12 H33"/><path d="M15 12 V8.5 H25 V12"/>
+        <circle cx="13.5" cy="42.5" r="2.6"/><path d="M4 4 L36 46 M36 4 L4 46"/>
+      </g>
+      <rect x="6" y="48" width="28" height="3.5" fill="#1b1b1f"/>
+    </svg>
+    <div>
+      <b style="color:var(--ink)">Disposal:</b> do not put this product in household waste. Take it to a collection point for
+      electrical and electronic equipment; retailers of electrical equipment take it back free of charge.<br>
+      <b style="color:var(--ink)">Manufacturer:</b> Lukáš Matuška, Na Vývozech 270, 664 99 Silůvky, Czech Republic ·
+      luk.matuska@seznam.cz
+    </div>
+    <div class="repo">
+      <img src="qr-repo.svg" alt="QR code: github.com/lukmatuska/NeonPine">
+      Open hardware<br>&amp; firmware
+    </div>
+  </footer>
+</div>
+
+</body>
+</html>
