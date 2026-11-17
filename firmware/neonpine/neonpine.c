@@ -39,7 +39,7 @@
 #include "ch32v003_touch.h"
 #include "anim.h"
 
-#define FW_VERSION 3
+#define FW_VERSION 4
 #define Q 4096  // Q12 fixed point: 1.0
 
 // ---- Boost -------------------------------------------------------------------------------------
